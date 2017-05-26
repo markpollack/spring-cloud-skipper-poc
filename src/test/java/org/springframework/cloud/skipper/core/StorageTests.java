@@ -58,7 +58,8 @@ public class StorageTests<K, V> {
 	@Test
 	public void testDeserialization() {
 
-		Deployment deployment = DeploymentUtils.load("classpath:/log/deployments/log.yml");
+		Deployment deployment = DeploymentUtils.load("classpath:/log/deployments/log.yml",
+				"classpath:/log/values.properties");
 		assertThat(deployment.getCount()).isEqualTo(2);
 		assertThat(deployment.getName()).isEqualTo("log");
 		assertThat(deployment.getResource())

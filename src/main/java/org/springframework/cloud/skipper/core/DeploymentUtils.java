@@ -22,15 +22,23 @@ import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Mark Pollack
  */
 public abstract class DeploymentUtils {
 
-	public static Deployment load(String resourceLocation) {
+	public static Deployment load(String resourceLocation, String... propertyFiles) {
 		Map<String, Object> properties = new HashMap<>();
-		properties.put("spring.config.location", resourceLocation);
+		//properties.put("spring.config.location","classpath:/log/deployments/log.yml,classpath:/log/values.properties");
+		if (propertyFiles == null) {
+			properties.put("spring.config.location", resourceLocation);
+		} else {
+			String listOfPropertyFiles = StringUtils.arrayToCommaDelimitedString(propertyFiles);
+			properties.put("spring.config.location", resourceLocation + "," + listOfPropertyFiles);
+		}
+
 		SpringApplicationBuilder builder = new SpringApplicationBuilder().properties(properties)
 				.bannerMode(Banner.Mode.OFF).sources(SimpleApp.class);
 		SpringApplication springApplication = builder.build();
