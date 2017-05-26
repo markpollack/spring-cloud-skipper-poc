@@ -41,6 +41,10 @@ public class Release {
 
 	private String description;
 
+	public Release() {
+
+	}
+
 	public Release(Deployment deployment, int version) {
 		this.deployment = deployment;
 		this.version = version;
