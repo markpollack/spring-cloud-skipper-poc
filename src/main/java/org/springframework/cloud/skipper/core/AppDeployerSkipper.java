@@ -37,8 +37,6 @@ import org.springframework.core.io.Resource;
  */
 public class AppDeployerSkipper implements Skipper {
 
-	// private static final Logger logger = LoggerFactory.getLogger
-
 	private final ReleaseRepository releaseRepository;
 
 	private final AppDeployer appDeployer;

@@ -15,6 +15,7 @@
  */
 package org.springframework.cloud.skipper.core;
 
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -22,6 +23,8 @@ import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisOperations;
+
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
@@ -33,6 +36,9 @@ public class StorageTests<K, V> {
 
 	@Autowired
 	private RedisOperations<K, V> operations;
+
+	@Autowired
+	private ReleaseRepository releaseRepository;
 
 	@Before
 	@After
@@ -60,7 +66,18 @@ public class StorageTests<K, V> {
 	}
 
 	@Test
-	void testReleaseStorage() {
+	public void testReleaseStorage() {
+		Deployment deployment = DeploymentUtils.load("classpath:/log/deployments/log.yml");
+		int version = 1;
+		Release release = new Release(deployment, version);
+		release.setName("myLogRelease");
+		release.setFirstDeployed(ISO8601Utils.format(new Date(), true));
+		release.setStatus("Installing...");
+		assertThat(release.getDeployment()).isNotNull();
+		releaseRepository.save(release);
+		assertThat(release.getDeployment()).isNotNull();
+		Release retrievedRelease = releaseRepository.findOne(release.getId());
+		assertThat(retrievedRelease.getDeployment()).isNotNull();
 
 	}
 
