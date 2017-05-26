@@ -1,0 +1,11 @@
+kind: Deployment
+deployment:
+  count: 2
+  name: log
+  applicationProperties:
+    log.level: INFO
+  resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE
+  resourceMetadata: maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE
+  deploymentProperties:
+    memory: 2048m
+
