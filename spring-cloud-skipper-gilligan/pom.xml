@@ -4,6 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <artifactId>spring-cloud-skipper-gilligan</artifactId>
     <packaging>jar</packaging>
+    <name>Spring Cloud Skipper Gilligan</name>
     <parent>
         <groupId>org.springframework.cloud</groupId>
         <artifactId>spring-cloud-skipper-parent</artifactId>
