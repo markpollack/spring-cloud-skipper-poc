@@ -42,19 +42,24 @@ public class ChartCreator {
 
 	private final TemplateRenderer templateRenderer;
 
-	private final Home home;
-
 	@Autowired
 	public ChartCreator(final Home home, final TemplateRenderer templateRenderer) {
-		this.home = home;
 		this.templateRenderer = templateRenderer;
 	}
 
 	public void createChart(final String name) {
-		final File rootDir;
-		rootDir = new File(home.getHomeDirectory());
-		rootDir.mkdirs();
-		final File chartDir = new File(rootDir, name);
+		final File chartDir;
+		File file = new File(name);
+		File parentDir = file.getParentFile();
+		if (parentDir == null) {
+			// write to current working directory
+			parentDir = new File(System.getProperty("user.dir")).getAbsoluteFile();
+			chartDir = new File(parentDir, name);
+
+		}
+		else {
+			chartDir = file;
+		}
 		chartDir.mkdirs();
 
 		// Save the chart file

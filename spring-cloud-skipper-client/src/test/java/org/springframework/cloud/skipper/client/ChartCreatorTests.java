@@ -35,6 +35,6 @@ public class ChartCreatorTests {
 
 	@Test
 	public void testChartCreation() {
-		chartCreator.createChart("transformer");
+		chartCreator.createChart("/tmp/skipper/transformer");
 	}
 }
