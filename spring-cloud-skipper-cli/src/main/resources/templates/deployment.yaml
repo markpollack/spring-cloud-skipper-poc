@@ -1,13 +1,13 @@
-kind: Deployment
+kind: AppDeployment
 deployment:
-  count: 1
-#  count: || values.count ||
-  name: {{name}}
+#  count: 1
+  count: {{=<% %>=}} {{ values.count }} <%={{ }}=%>
+  name: {{=<% %>=}} {{ chart.name }} <%={{ }}=%>
   applicationProperties:
     log.level: WARN
-  resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE
-#  resource: || values.application.resource ||
-  resourceMetadata: maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE
-#  resource: || values.application.resourceMetadata ||
+#  resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE
+  resource: {{=<% %>=}} {{ values.application.resource }} <%={{ }}=%>
+#  resourceMetadata: maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE
+  resource: {{=<% %>=}} {{  values.application.resourceMetadata }} <%={{ }}=%>
   deploymentProperties:
     memory: 2048m

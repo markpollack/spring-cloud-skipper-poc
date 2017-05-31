@@ -38,12 +38,17 @@ import org.springframework.util.ConcurrentReferenceHashMap;
  */
 public class TemplateRenderer {
 
+	public static final String prefix = "classpath:/templates/";
+
 	private static final Logger log = LoggerFactory.getLogger(TemplateRenderer.class);
+
 	private final Compiler mustache;
+
 	private final ConcurrentMap<String, Template> templateCaches = new ConcurrentReferenceHashMap<>();
+
 	private boolean cache = true;
 
-	public TemplateRenderer(Compiler mustache) {
+	public TemplateRenderer(final Compiler mustache) {
 		this.mustache = mustache;
 	}
 
@@ -56,45 +61,46 @@ public class TemplateRenderer {
 	}
 
 	private static TemplateLoader mustacheTemplateLoader() {
-		ResourceLoader resourceLoader = new DefaultResourceLoader();
-		String prefix = "classpath:/templates/";
-		Charset charset = Charset.forName("UTF-8");
-		return name -> new InputStreamReader(resourceLoader.getResource(prefix + name).getInputStream(), charset);
+		final ResourceLoader resourceLoader = new DefaultResourceLoader();
+		final Charset charset = Charset.forName("UTF-8");
+		return (String name) -> {
+			return new InputStreamReader(resourceLoader.getResource(prefix + name).getInputStream(), charset);
+		};
 	}
 
 	public boolean isCache() {
 		return cache;
 	}
 
-	public void setCache(boolean cache) {
+	public void setCache(final boolean cache) {
 		this.cache = cache;
 	}
 
-	public String process(String name, Map<String, ?> model) {
+	public String process(final String name, final Map<String, ?> model) {
 		try {
-			Template template = getTemplate(name);
+			final Template template = getTemplate(name);
 			return template.execute(model);
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			log.error("Cannot render: " + name, e);
 			throw new IllegalStateException("Cannot render template", e);
 		}
 	}
 
-	public Template getTemplate(String name) {
+	public Template getTemplate(final String name) {
 		if (cache) {
 			return this.templateCaches.computeIfAbsent(name, this::loadTemplate);
 		}
 		return loadTemplate(name);
 	}
 
-	protected Template loadTemplate(String name) {
+	protected Template loadTemplate(final String name) {
 		try {
-			Reader template;
+			final Reader template;
 			template = mustache.loader.getTemplate(name);
 			return mustache.compile(template);
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			throw new IllegalStateException("Cannot load template " + name, e);
 		}
 	}

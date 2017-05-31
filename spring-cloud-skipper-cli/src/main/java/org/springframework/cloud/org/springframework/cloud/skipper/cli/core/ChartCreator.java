@@ -26,6 +26,8 @@ import java.util.Map;
 import jline.internal.Log;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.util.StreamUtils;
 
 /**
@@ -33,22 +35,24 @@ import org.springframework.util.StreamUtils;
  */
 public class ChartCreator {
 
-	private TemplateRenderer templateRenderer;
+	final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-	private Home home;
+	private final TemplateRenderer templateRenderer;
+
+	private final Home home;
 
 	@Autowired
-	public ChartCreator(Home home, TemplateRenderer templateRenderer) {
+	public ChartCreator(final Home home, final TemplateRenderer templateRenderer) {
 		this.home = home;
 		this.templateRenderer = templateRenderer;
 	}
 
-	public void createChart(String name) {
+	public void createChart(final String name) {
 		Log.info("Creating " + name);
-		File rootDir;
+		final File rootDir;
 		rootDir = new File(home.getHomeDirectory());
 		rootDir.mkdirs();
-		File chartDir = new File(rootDir, name);
+		final File chartDir = new File(rootDir, name);
 		chartDir.mkdirs();
 
 		// Save the chart file
@@ -68,7 +72,8 @@ public class ChartCreator {
 		templatesDir.mkdirs();
 		File deploymentFile = new File(templatesDir, ChartKeys.DeploymentFileName);
 		model = new HashMap<String, Object>();
-		model.put("name", name);
+		// model.put("name", name);
+		// model.put("values", values);
 		writeText(deploymentFile, this.templateRenderer.process(ChartKeys.DeploymentFileName, model));
 
 		// Create the charts directory
@@ -76,11 +81,11 @@ public class ChartCreator {
 		chartsDir.mkdirs();
 	}
 
-	private void writeText(File target, String body) {
+	private void writeText(final File target, final String body) {
 		try (OutputStream stream = new FileOutputStream(target)) {
 			StreamUtils.copy(body, Charset.forName("UTF-8"), stream);
 		}
-		catch (Exception e) {
+		catch (final Exception e) {
 			throw new IllegalStateException("Cannot write file " + target, e);
 		}
 	}
