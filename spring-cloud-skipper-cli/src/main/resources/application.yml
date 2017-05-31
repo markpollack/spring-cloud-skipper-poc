@@ -1,6 +1,7 @@
 logging:
   level:
     org.springframework.cloud.skipper.cli: 'WARN'
+    org.springframework.cloud.skipper.cli.command: 'INFO'
     org.springframework.cloud.skipper.client: 'INFO'
     org.springframework.context: 'WARN'
     org.springframework.jmx: 'WARN'

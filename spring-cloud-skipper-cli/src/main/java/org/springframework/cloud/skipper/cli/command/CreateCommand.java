@@ -84,7 +84,9 @@ public class CreateCommand extends OptionParsingCommand {
 				List<?> nonOptionArguments = new ArrayList<Object>(options.nonOptionArguments());
 				Assert.isTrue(nonOptionArguments.size() <= 1, "Only the chart name may be specified");
 
-				chartCreator.createChart((String) nonOptionArguments.get(0));
+				String name = (String) nonOptionArguments.get(0);
+				log.info("Creating " + name);
+				chartCreator.createChart(name);
 
 				return ExitStatus.OK;
 			}

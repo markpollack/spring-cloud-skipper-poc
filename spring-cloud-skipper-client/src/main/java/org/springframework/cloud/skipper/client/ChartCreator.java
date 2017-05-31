@@ -51,7 +51,6 @@ public class ChartCreator {
 	}
 
 	public void createChart(final String name) {
-		log.info("Creating " + name);
 		final File rootDir;
 		rootDir = new File(home.getHomeDirectory());
 		rootDir.mkdirs();
