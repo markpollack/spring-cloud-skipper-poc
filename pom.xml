@@ -65,6 +65,11 @@
                 <artifactId>spring-shell</artifactId>
                 <version>1.2.0.RELEASE</version>
             </dependency>
+            <dependency>
+                <groupId>org.zeroturnaround</groupId>
+                <artifactId>zt-zip</artifactId>
+                <version>1.11</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>

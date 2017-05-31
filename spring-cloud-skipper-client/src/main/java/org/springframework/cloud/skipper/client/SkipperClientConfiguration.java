@@ -51,4 +51,9 @@ public class SkipperClientConfiguration {
 		return new ChartCreator(home, templateRenderer);
 	}
 
+	@Bean
+	public PackageManager packageManager() {
+		return new PackageManager();
+	}
+
 }
