@@ -1,0 +1,9 @@
+logging:
+  level:
+    org.springframework: 'WARN'
+    org.apache.catalina: 'WARN'
+#how to avoid having any embedded server?
+
+
+
+

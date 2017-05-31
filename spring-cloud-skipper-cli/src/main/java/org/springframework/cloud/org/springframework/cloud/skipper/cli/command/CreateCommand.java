@@ -24,11 +24,13 @@ import java.util.List;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.cli.command.HelpExample;
 import org.springframework.boot.cli.command.OptionParsingCommand;
 import org.springframework.boot.cli.command.options.OptionHandler;
 import org.springframework.boot.cli.command.status.ExitStatus;
 import org.springframework.boot.cli.util.Log;
+import org.springframework.cloud.org.springframework.cloud.skipper.cli.core.ChartCreator;
 import org.springframework.util.Assert;
 
 /**
@@ -36,8 +38,9 @@ import org.springframework.util.Assert;
  */
 public class CreateCommand extends OptionParsingCommand {
 
-	public CreateCommand() {
-		this(new CreateOptionHandler());
+	@Autowired
+	public CreateCommand(ChartCreator chartCreator) {
+		this(new CreateOptionHandler(chartCreator));
 	}
 
 	public CreateCommand(CreateOptionHandler handler) {
@@ -58,7 +61,10 @@ public class CreateCommand extends OptionParsingCommand {
 
 		private OptionSpec<String> starter;
 
-		CreateOptionHandler() {
+		private ChartCreator chartCreator;
+
+		CreateOptionHandler(ChartCreator chartCreator) {
+			this.chartCreator = chartCreator;
 		}
 
 		@Override
@@ -74,6 +80,8 @@ public class CreateCommand extends OptionParsingCommand {
 			try {
 				List<?> nonOptionArguments = new ArrayList<Object>(options.nonOptionArguments());
 				Assert.isTrue(nonOptionArguments.size() <= 1, "Only the chart name may be specified");
+
+				chartCreator.createChart((String) nonOptionArguments.get(0));
 
 				return ExitStatus.OK;
 			}

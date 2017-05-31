@@ -100,9 +100,6 @@
             <property name="option" value="bottom"/>
             <property name="sortStaticImportsAlphabetically" value="true"/>
         </module>
-        <module name="IllegalImport">
-            <property name="illegalPkgs" value="org.slf4j"/>
-        </module>
         <module name="RedundantImport"/>
         <module name="ReturnCount">
             <property name="max" value="0"/>

@@ -5,7 +5,7 @@
     <groupId>org.springframework.cloud</groupId>
     <artifactId>spring-cloud-skipper-parent</artifactId>
     <version>1.0.0-BUILD-SNAPSHOT</version>
-    <name>Spring Cloud Skipper Parent</name>
+    <name>Spring Cloud Skipper</name>
     <packaging>pom</packaging>
     <organization>
         <name>Pivotal Software, Inc.</name>

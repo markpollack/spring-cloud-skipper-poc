@@ -15,33 +15,45 @@
  */
 package org.springframework.cloud.org.springframework.cloud.skipper.cli;
 
+import org.springframework.boot.Banner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.boot.cli.command.CommandRunner;
-import org.springframework.boot.cli.command.core.HelpCommand;
-import org.springframework.boot.cli.command.core.HintCommand;
 import org.springframework.boot.loader.tools.LogbackInitializer;
-import org.springframework.cloud.org.springframework.cloud.skipper.cli.command.VersionCommand;
+import org.springframework.context.ConfigurableApplicationContext;
 
-public final class SkipperCli {
-
-	private SkipperCli() {
-
-	}
+@SpringBootApplication
+public class SkipperCli {
 
 	public static void main(String[] args) {
 		System.setProperty("java.awt.headless", Boolean.toString(true));
 		LogbackInitializer.initialize();
 
-		CommandRunner runner = new CommandRunner("skipper");
-		runner.addCommand(new HelpCommand(runner));
-		runner.addCommand(new HintCommand(runner));
-		runner.addCommand(new VersionCommand());
-		runner.setOptionCommands(HelpCommand.class);
-		runner.setHiddenCommands(HintCommand.class);
+		/*
+		 * public static void main(String[] args) {
+		 * SpringApplication.run(SkipperApplication.class, args); }
+		 */
+
+		SpringApplicationBuilder builder = new SpringApplicationBuilder().bannerMode(Banner.Mode.OFF)
+				.sources(SkipperCli.class);
+		SpringApplication springApplication = builder.build();
+		ConfigurableApplicationContext ctx = springApplication.run();
+		CommandRunner runner = ctx.getBean(CommandRunner.class);
+
+		// CommandRunner runner = new CommandRunner("skipper");
+		// runner.addCommand(new HelpCommand(runner));
+		// runner.addCommand(new HintCommand(runner));
+		// runner.addCommand(new CreateCommand(runner));
+		// runner.addCommand(new VersionCommand());
+		// runner.setOptionCommands(HelpCommand.class);
+		// runner.setHiddenCommands(HintCommand.class);
 
 		int exitCode = runner.runAndHandleErrors(args);
-		if (exitCode != 0) {
-			// If successful, leave it to run in case it's a server app
-			System.exit(exitCode);
-		}
+		System.exit(exitCode);
+		// if (exitCode != 0) {
+		// // If successful, leave it to run in case it's a server app
+		// System.exit(exitCode);
+		// }
 	}
 }

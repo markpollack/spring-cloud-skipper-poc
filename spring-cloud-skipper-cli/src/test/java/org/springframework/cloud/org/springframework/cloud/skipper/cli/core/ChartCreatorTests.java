@@ -16,8 +16,6 @@
 
 package org.springframework.cloud.org.springframework.cloud.skipper.cli.core;
 
-import java.io.File;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -25,21 +23,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 /**
  * @author Mark Pollack
  */
-
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = SkipperConfiguration.class)
-public class HomeTests {
+public class ChartCreatorTests {
 
 	@Autowired
-	private Home home;
+	private ChartCreator chartCreator;
 
 	@Test
-	public void homeDefaults() {
-		assertThat(home.getHomeDirectory()).isEqualTo(System.getProperty("user.home") + File.separator + ".skipper");
+	public void testChartCreation() {
+		chartCreator.createChart("transformer");
 	}
 }

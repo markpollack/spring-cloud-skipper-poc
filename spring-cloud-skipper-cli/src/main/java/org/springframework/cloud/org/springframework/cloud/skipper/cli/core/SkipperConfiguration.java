@@ -16,10 +16,18 @@
 
 package org.springframework.cloud.org.springframework.cloud.skipper.cli.core;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.bind.RelaxedPropertyResolver;
+import org.springframework.boot.cli.command.CommandRunner;
+import org.springframework.boot.cli.command.core.HelpCommand;
+import org.springframework.boot.cli.command.core.HintCommand;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.org.springframework.cloud.skipper.cli.SkipperConfigurationProperties;
+import org.springframework.cloud.org.springframework.cloud.skipper.cli.command.CreateCommand;
+import org.springframework.cloud.org.springframework.cloud.skipper.cli.command.VersionCommand;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 
 /**
  * @author Mark Pollack
@@ -31,6 +39,33 @@ public class SkipperConfiguration {
 	@Bean
 	public Home home(SkipperConfigurationProperties skipperConfigurationProperties) {
 		return new Home(skipperConfigurationProperties.getHome());
+	}
+
+	@Bean
+	@ConditionalOnMissingBean
+	public TemplateRenderer templateRenderer(Environment environment) {
+		RelaxedPropertyResolver resolver = new RelaxedPropertyResolver(environment, "spring.mustache.");
+		boolean cache = resolver.getProperty("cache", Boolean.class, true);
+		TemplateRenderer templateRenderer = new TemplateRenderer();
+		templateRenderer.setCache(cache);
+		return templateRenderer;
+	}
+
+	@Bean
+	public ChartCreator chartCreator(Home home, TemplateRenderer templateRenderer) {
+		return new ChartCreator(home, templateRenderer);
+	}
+
+	@Bean
+	public CommandRunner commandRunner(ChartCreator chartCreator) {
+		CommandRunner runner = new CommandRunner("skipper");
+		runner.addCommand(new HelpCommand(runner));
+		runner.addCommand(new HintCommand(runner));
+		runner.addCommand(new CreateCommand(chartCreator));
+		runner.addCommand(new VersionCommand());
+		runner.setOptionCommands(HelpCommand.class);
+		runner.setHiddenCommands(HintCommand.class);
+		return runner;
 	}
 
 }

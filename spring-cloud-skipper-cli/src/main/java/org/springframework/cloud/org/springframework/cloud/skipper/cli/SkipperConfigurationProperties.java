@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.org.springframework.cloud.skipper.cli;
 
+import java.io.File;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -24,7 +26,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("skipper")
 public class SkipperConfigurationProperties {
 
-	private String home = System.getProperty("user.home");
+	private String home = System.getProperty("user.home") + File.separator + ".skipper";
 
 	private String host = "https://localhost:4454";
 
