@@ -49,10 +49,7 @@ public class ChartCreator {
 		rootDir = new File(home.getHomeDirectory());
 		rootDir.mkdirs();
 		File chartDir = new File(rootDir, name);
-		if (!chartDir.mkdirs()) {
-			// TODO try to clean up intermediate directories
-			throw new IllegalStateException("Cannot create chart directory " + chartDir);
-		}
+		chartDir.mkdirs();
 
 		// Save the chart file
 		File chartFile = new File(chartDir, ChartKeys.ChartFileName);
