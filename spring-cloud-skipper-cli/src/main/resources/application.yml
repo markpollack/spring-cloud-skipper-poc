@@ -1,6 +1,12 @@
 logging:
   level:
-    org.springframework: 'WARN'
+    org.springframework.cloud.skipper.cli: 'WARN'
+    org.springframework.cloud.skipper.client: 'INFO'
+    org.springframework.context: 'WARN'
+    org.springframework.jmx: 'WARN'
+  pattern:
+    console: "%clr(%-5p): %msg%n"
+
 
 
 

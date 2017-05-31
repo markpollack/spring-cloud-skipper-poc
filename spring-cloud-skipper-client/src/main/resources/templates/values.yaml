@@ -1,0 +1,10 @@
+# Default values for {{name}}
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates
+count: 1
+application:
+  resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE
+  resourceMetadata: maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE
+resources:
+  requests:
+    memory: 1024m
