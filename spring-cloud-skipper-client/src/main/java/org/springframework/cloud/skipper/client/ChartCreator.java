@@ -48,18 +48,7 @@ public class ChartCreator {
 	}
 
 	public void createChart(final String name) {
-		final File chartDir;
-		File file = new File(name);
-		File parentDir = file.getParentFile();
-		if (parentDir == null) {
-			// write to current working directory
-			parentDir = new File(System.getProperty("user.dir")).getAbsoluteFile();
-			chartDir = new File(parentDir, name);
-
-		}
-		else {
-			chartDir = file;
-		}
+		final File chartDir = new File(name);
 		chartDir.mkdirs();
 
 		// Save the chart file
