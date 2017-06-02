@@ -52,8 +52,18 @@ public class SkipperClientConfiguration {
 	}
 
 	@Bean
+	public GilliganClient gilliganClient() {
+		return new GilliganClient("http://localhost:8080/skipper");
+	}
+
+	@Bean
 	public PackageManager packageManager() {
 		return new PackageManager();
+	}
+
+	@Bean
+	public InstallService installService(GilliganClient gilliganClient) {
+		return new InstallService(gilliganClient);
 	}
 
 }
