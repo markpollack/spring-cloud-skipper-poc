@@ -44,9 +44,9 @@ public class GilliganClient {
 	}
 
 	public InstallReleaseResponse install(InstallReleaseRequest installReleaseRequest) {
-		InstallReleaseResponse response;
+
 		log.info("Posting to " + baseURI + "/install");
-		response = restTemplate.postForObject(baseURI + "/install", installReleaseRequest,
+		InstallReleaseResponse response = restTemplate.postForObject(baseURI + "/install", installReleaseRequest,
 				InstallReleaseResponse.class);
 		return response;
 	}

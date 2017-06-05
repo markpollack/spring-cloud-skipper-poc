@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.skipper.rpc.Chart;
 import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
 import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
 import org.springframework.cloud.skipper.rpc.Release;
@@ -31,11 +32,17 @@ public class InstallService {
 
 	private final GilliganClient gilliganClient;
 
+	private final ChartResolver chartResolver;
+
+	private final ChartLoader chartLoader;
+
 	private static final Logger log = LoggerFactory.getLogger(InstallService.class);
 
 	@Autowired
-	public InstallService(GilliganClient gilliganClient) {
+	public InstallService(GilliganClient gilliganClient, ChartResolver chartResolver, ChartLoader chartLoader) {
 		this.gilliganClient = gilliganClient;
+		this.chartResolver = chartResolver;
+		this.chartLoader = chartLoader;
 	}
 
 	public Release install(String chartName, String releaseName) {
@@ -47,6 +54,10 @@ public class InstallService {
 		else {
 			releaseNameToUse = releaseName;
 		}
+
+		String chartPath = chartResolver.resolve(chartName);
+		Chart chart = chartLoader.load(chartPath);
+
 		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, null, null);
 		InstallReleaseResponse response = gilliganClient.install(request);
 		return response.getRelease();

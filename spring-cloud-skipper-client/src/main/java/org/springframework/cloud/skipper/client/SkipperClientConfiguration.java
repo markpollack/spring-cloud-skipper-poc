@@ -62,8 +62,19 @@ public class SkipperClientConfiguration {
 	}
 
 	@Bean
-	public InstallService installService(GilliganClient gilliganClient) {
-		return new InstallService(gilliganClient);
+	public InstallService installService(GilliganClient gilliganClient, ChartResolver chartResolver,
+			ChartLoader chartLoader) {
+		return new InstallService(gilliganClient, chartResolver, chartLoader);
+	}
+
+	@Bean
+	public ChartResolver chartResolver() {
+		return new ChartResolver();
+	}
+
+	@Bean
+	public ChartLoader chartLoader() {
+		return new ChartLoader();
 	}
 
 }

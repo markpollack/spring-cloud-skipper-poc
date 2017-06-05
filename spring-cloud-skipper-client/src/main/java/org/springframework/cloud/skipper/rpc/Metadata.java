@@ -39,6 +39,12 @@ public class Metadata {
 	// The version of the application enclosed inside of this chart.
 	private String appVersion;
 
+	// A list of string keywords
+	private String[] keywords;
+
+	// The URL to a relevant project page, git repo, or contact person
+	private String home;
+
 	public Metadata() {
 	}
 
@@ -72,5 +78,21 @@ public class Metadata {
 
 	public void setAppVersion(String appVersion) {
 		this.appVersion = appVersion;
+	}
+
+	public String[] getKeywords() {
+		return keywords;
+	}
+
+	public void setKeywords(String[] keywords) {
+		this.keywords = keywords;
+	}
+
+	public String getHome() {
+		return home;
+	}
+
+	public void setHome(String home) {
+		this.home = home;
 	}
 }
