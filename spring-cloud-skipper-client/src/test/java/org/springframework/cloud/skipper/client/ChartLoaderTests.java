@@ -46,8 +46,7 @@ public class ChartLoaderTests {
 		assertThat(metadata.getDescription()).isEqualTo("Logs payload to the console");
 		assertThat(metadata.getKeywords()).contains("logging");
 		assertThat(metadata.getHome()).isEqualTo("https://github.com/spring-cloud-stream-app-starters/log");
-		assertThat(chart.getConfigValues().getRaw()).isEqualTo(
-				"deployment.resource=maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE\n");
+		assertThat(chart.getConfigValues().getRaw()).contains("1024m");
 		Template template = chart.getTemplates()[0];
 		assertThat(template.getName()).isEqualTo("log.yml");
 		assertThat(template.getData()).isNotEmpty();

@@ -20,6 +20,8 @@ import java.util.Map;
 
 /**
  * Config supplies values to the parametrizable templates of a chart.
+ *
+ * On the client side, it is a string of unparsed YAMl values.
  * @author Mark Pollack
  */
 public class Config {

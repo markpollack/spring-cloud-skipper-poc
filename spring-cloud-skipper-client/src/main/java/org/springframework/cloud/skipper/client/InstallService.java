@@ -58,7 +58,7 @@ public class InstallService {
 		String chartPath = chartResolver.resolve(chartName);
 		Chart chart = chartLoader.load(chartPath);
 
-		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, null, null);
+		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, chart, null);
 		InstallReleaseResponse response = gilliganClient.install(request);
 		return response.getRelease();
 	}
