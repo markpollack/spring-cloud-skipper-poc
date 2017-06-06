@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,28 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper.client;
 
-import java.util.List;
+package org.springframework.cloud.skipper.gilligan.repository;
 
-import org.springframework.cloud.skipper.client.old.ReleasePocV1;
+import org.springframework.cloud.skipper.rpc.Release;
+import org.springframework.data.repository.CrudRepository;
 
 /**
  * @author Mark Pollack
  */
-public interface Skipper {
+public interface ReleaseRepository extends CrudRepository<Release, String> {
 
-	void install(String releaseName, String deploymentResource);
-
-	String status(String releaseName);
-
-	ReleasePocV1 describe(String releaseName);
-
-	List<ReleasePocV1> history(String releaseName);
-
-	String upgrade(String releaseName, String deploymentResource);
-
-	String rollback(String releaseName, String version);
-
-	void delete(String releaseName);
 }

@@ -16,11 +16,14 @@
 
 package org.springframework.cloud.skipper.client;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.InputStream;
 import java.util.Properties;
 
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 
 /**
@@ -28,12 +31,31 @@ import org.springframework.core.io.Resource;
  */
 public abstract class YamlUtils {
 
-	static Properties getProperties(File file) {
+	public static Properties getProperties(File file) {
 		YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
 		Resource resource = new FileSystemResource(file);
 		yaml.setResources(resource);
 		yaml.afterPropertiesSet();
 		Properties values = yaml.getObject();
 		return values;
+	}
+
+	public static Properties getProperties(String templateString) {
+		YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
+
+		Properties values;
+
+		try (InputStream is = new ByteArrayInputStream(templateString.getBytes())) {
+			yaml.setResources(new InputStreamResource(is));
+			yaml.afterPropertiesSet();
+			values = yaml.getObject();
+		}
+		catch (Exception e) {
+			throw new IllegalArgumentException(
+					"Could not convert YAML to properties object from string " + templateString);
+		}
+
+		return values;
+
 	}
 }

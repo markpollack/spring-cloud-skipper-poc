@@ -20,10 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.skipper.rpc.Chart;
-import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
-import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
-import org.springframework.cloud.skipper.rpc.Release;
+import org.springframework.cloud.skipper.rpc.*;
 
 /**
  * @author Mark Pollack
@@ -58,7 +55,7 @@ public class InstallService {
 		String chartPath = chartResolver.resolve(chartName);
 		Chart chart = chartLoader.load(chartPath);
 
-		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, chart, null);
+		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, chart, new Config());
 		InstallReleaseResponse response = gilliganClient.install(request);
 		return response.getRelease();
 	}

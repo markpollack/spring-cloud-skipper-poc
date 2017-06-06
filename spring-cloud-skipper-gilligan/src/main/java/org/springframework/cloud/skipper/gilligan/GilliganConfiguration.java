@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,36 +13,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper;
+
+package org.springframework.cloud.skipper.gilligan;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.deployer.resource.docker.DockerResourceLoader;
 import org.springframework.cloud.deployer.resource.maven.MavenProperties;
 import org.springframework.cloud.deployer.resource.maven.MavenResourceLoader;
 import org.springframework.cloud.deployer.resource.support.DelegatingResourceLoader;
-import org.springframework.cloud.deployer.spi.app.AppDeployer;
-import org.springframework.cloud.skipper.client.AppDeployerSkipper;
-import org.springframework.cloud.skipper.client.ReleaseRepository;
-import org.springframework.cloud.skipper.client.Skipper;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 
-@SpringBootApplication
-@EnableRedisRepositories
-public class SkipperApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(SkipperApplication.class, args);
-	}
+/**
+ * @author Mark Pollack
+ */
+@Configuration
+public class GilliganConfiguration {
 
 	@Bean
 	RedisConnectionFactory connectionFactory() {
@@ -58,11 +51,13 @@ public class SkipperApplication {
 		return template;
 	}
 
-	@Bean
-	public Skipper skipper(ReleaseRepository releaseRepository, AppDeployer appDeployer,
-			DelegatingResourceLoader delegatingResourceLoader) {
-		return new AppDeployerSkipper(releaseRepository, appDeployer, delegatingResourceLoader);
-	}
+	// @Bean
+	// public Skipper skipper(ReleasePocV1Repository releaseRepository, AppDeployer
+	// appDeployer,
+	// DelegatingResourceLoader delegatingResourceLoader) {
+	// return new AppDeployerSkipper(releaseRepository, appDeployer,
+	// delegatingResourceLoader);
+	// }
 
 	@Bean
 	public MavenProperties mavenProperties() {
@@ -78,6 +73,14 @@ public class SkipperApplication {
 		loaders.put("maven", mavenResourceLoader);
 		return new DelegatingResourceLoader(loaders);
 	}
+
+	// @Bean
+	// public GilliganController skipperController(ReleaseRepository releaseRepository,
+	// AppDeployer appDeployer,
+	// DelegatingResourceLoader delegatingResourceLoader) {
+	// return new GilliganController(releaseRepository, appDeployer,
+	// delegatingResourceLoader);
+	// }
 
 	@ConfigurationProperties(prefix = "maven")
 	static class MavenConfigurationProperties extends MavenProperties {

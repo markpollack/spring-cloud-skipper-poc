@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper.client;
+package org.springframework.cloud.skipper.client.old;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -30,6 +30,8 @@ import org.springframework.cloud.deployer.spi.app.AppStatus;
 import org.springframework.cloud.deployer.spi.app.DeploymentState;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
+import org.springframework.cloud.skipper.client.Skipper;
+import org.springframework.cloud.skipper.client.domain.Deployment;
 import org.springframework.core.io.Resource;
 
 /**
@@ -37,14 +39,14 @@ import org.springframework.core.io.Resource;
  */
 public class AppDeployerSkipper implements Skipper {
 
-	private final ReleaseRepository releaseRepository;
+	private final ReleasePocV1Repository releaseRepository;
 
 	private final AppDeployer appDeployer;
 
 	private final DelegatingResourceLoader delegatingResourceLoader;
 
 	@Autowired
-	public AppDeployerSkipper(ReleaseRepository releaseRepository, AppDeployer appDeployer,
+	public AppDeployerSkipper(ReleasePocV1Repository releaseRepository, AppDeployer appDeployer,
 			DelegatingResourceLoader delegatingResourceLoader) {
 		this.releaseRepository = releaseRepository;
 		this.appDeployer = appDeployer;
@@ -57,12 +59,12 @@ public class AppDeployerSkipper implements Skipper {
 		Deployment deployment = DeploymentUtils.load(deploymentResource);
 
 		int version = 1;
-		Release release = newRelease(releaseName, deployment, version);
+		ReleasePocV1 release = newRelease(releaseName, deployment, version);
 
 		deploy(deployment, release);
 	}
 
-	private void deploy(Deployment deployment, Release release) {
+	private void deploy(Deployment deployment, ReleasePocV1 release) {
 		String deploymentId = appDeployer.deploy(
 				createAppDeploymentRequest(deployment, release.getName(), String.valueOf(release.getVersion())));
 		release.setDeploymentId(deploymentId);
@@ -70,24 +72,24 @@ public class AppDeployerSkipper implements Skipper {
 		releaseRepository.save(release);
 	}
 
-	private void undeploy(Release release) {
+	private void undeploy(ReleasePocV1 release) {
 		appDeployer.undeploy(release.getDeploymentId());
 		release.setStatus("Applications undeploying.  DeploymentId = [" + release.getDeploymentId() + "]");
 		releaseRepository.save(release);
 	}
 
-	private Release newRelease(String releaseName, Deployment deployment, int version) {
-		Release release = new Release(deployment, version);
+	private ReleasePocV1 newRelease(String releaseName, Deployment deployment, int version) {
+		ReleasePocV1 release = new ReleasePocV1(deployment, version);
 		release.setName(releaseName);
 		release.setFirstDeployed(ISO8601Utils.format(new Date(), true));
 		release.setStatus("Installing...");
 		releaseRepository.save(release);
 
-		Release test = releaseRepository.findOne(release.getId());
+		ReleasePocV1 test = releaseRepository.findOne(release.getId());
 		return release;
 	}
 
-	private void calculateStatus(Release release) {
+	private void calculateStatus(ReleasePocV1 release) {
 		// TODO put in background thread.
 		boolean allClear = true;
 
@@ -131,7 +133,7 @@ public class AppDeployerSkipper implements Skipper {
 
 	@Override
 	public String status(String releaseName) {
-		Release latestRelease = getLatestRelease(releaseName);
+		ReleasePocV1 latestRelease = getLatestRelease(releaseName);
 		if (latestRelease != null) {
 			calculateStatus(latestRelease);
 			return latestRelease.getStatus();
@@ -142,11 +144,11 @@ public class AppDeployerSkipper implements Skipper {
 
 	}
 
-	private Release getLatestRelease(String releaseName) {
-		Iterable<Release> releases = releaseRepository.findAll();
+	private ReleasePocV1 getLatestRelease(String releaseName) {
+		Iterable<ReleasePocV1> releases = releaseRepository.findAll();
 		int lastVersion = 0;
-		Release latestRelease = null;
-		for (Release release : releases) {
+		ReleasePocV1 latestRelease = null;
+		for (ReleasePocV1 release : releases) {
 			// Find the latest release
 			if (release.getName().equals(releaseName)) {
 				if (release.getVersion() > lastVersion) {
@@ -159,8 +161,8 @@ public class AppDeployerSkipper implements Skipper {
 	}
 
 	@Override
-	public Release describe(String releaseName) {
-		Release latestRelease = getLatestRelease(releaseName);
+	public ReleasePocV1 describe(String releaseName) {
+		ReleasePocV1 latestRelease = getLatestRelease(releaseName);
 		if (latestRelease != null) {
 			calculateStatus(latestRelease);
 			return latestRelease;
@@ -171,10 +173,10 @@ public class AppDeployerSkipper implements Skipper {
 	}
 
 	@Override
-	public List<Release> history(String releaseName) {
-		List<Release> releaseList = new ArrayList<>();
-		Iterable<Release> releases = releaseRepository.findAll();
-		for (Release release : releases) {
+	public List<ReleasePocV1> history(String releaseName) {
+		List<ReleasePocV1> releaseList = new ArrayList<>();
+		Iterable<ReleasePocV1> releases = releaseRepository.findAll();
+		for (ReleasePocV1 release : releases) {
 			if (release.getName().equals(releaseName)) {
 				releaseList.add(release);
 			}
@@ -189,13 +191,13 @@ public class AppDeployerSkipper implements Skipper {
 		Deployment deployment = DeploymentUtils.load(deploymentResource);
 
 		// Get latestRelease, which becomes the previous release
-		Release previousRelease = getLatestRelease(releaseName);
+		ReleasePocV1 previousRelease = getLatestRelease(releaseName);
 		if (previousRelease == null) {
 			throw new IllegalArgumentException("Could not find latest release for [" + releaseName + "]");
 		}
 
 		// Create new release with updated version
-		Release release = newRelease(releaseName, deployment, previousRelease.getVersion() + 1);
+		ReleasePocV1 release = newRelease(releaseName, deployment, previousRelease.getVersion() + 1);
 		releaseRepository.save(release);
 
 		// Deploy new release

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper.client;
+package org.springframework.cloud.skipper.client.old;
 
+import org.springframework.cloud.skipper.client.domain.Deployment;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
 
 /**
  * @author Mark Pollack
  */
-@RedisHash("releases")
-public class Release {
+// @RedisHash("releases")
+public class ReleasePocV1 {
 
 	@Id
 	private String id;
@@ -41,11 +41,11 @@ public class Release {
 
 	private String description;
 
-	public Release() {
+	public ReleasePocV1() {
 
 	}
 
-	public Release(Deployment deployment, int version) {
+	public ReleasePocV1(Deployment deployment, int version) {
 		this.deployment = deployment;
 		this.version = version;
 	}
@@ -116,8 +116,8 @@ public class Release {
 
 	@Override
 	public String toString() {
-		return "Release{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", deployment=" + deployment + ", version="
-				+ version + ", status='" + status + '\'' + ", deploymentId='" + deploymentId + '\''
+		return "ReleasePocV1{" + "id='" + id + '\'' + ", name='" + name + '\'' + ", deployment=" + deployment
+				+ ", version=" + version + ", status='" + status + '\'' + ", deploymentId='" + deploymentId + '\''
 				+ ", firstDeployed='" + firstDeployed + '\'' + ", description='" + description + '\'' + '}';
 	}
 }

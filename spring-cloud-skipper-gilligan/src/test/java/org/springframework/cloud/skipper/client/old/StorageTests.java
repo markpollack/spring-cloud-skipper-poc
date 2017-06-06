@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper.client;
+package org.springframework.cloud.skipper.client.old;
 
 import java.util.Date;
+import java.util.Scanner;
 
-import com.fasterxml.jackson.databind.util.ISO8601Utils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,6 +25,13 @@ import org.junit.runner.RunWith;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.skipper.client.domain.Deployment;
+import org.springframework.cloud.skipper.gilligan.GilliganApplication;
+import org.springframework.cloud.skipper.gilligan.controller.YmlUtils;
+import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
+import org.springframework.cloud.skipper.rpc.Info;
+import org.springframework.cloud.skipper.rpc.Release;
+import org.springframework.cloud.skipper.rpc.Status;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -36,7 +43,7 @@ import static org.assertj.core.api.Assertions.entry;
  * @author Mark Pollack
  */
 @RunWith(SpringRunner.class)
-@SpringBootTest
+@SpringBootTest(classes = GilliganApplication.class)
 public class StorageTests<K, V> {
 
 	@Autowired
@@ -57,9 +64,9 @@ public class StorageTests<K, V> {
 
 	@Test
 	public void testDeserialization() {
+		String text = loadLogYaml();
+		Deployment deployment = YmlUtils.unmarshallDeployment(text);
 
-		Deployment deployment = DeploymentUtils.load("classpath:/log/deployments/log.yml",
-				"classpath:/log/values.properties");
 		assertThat(deployment.getCount()).isEqualTo(2);
 		assertThat(deployment.getName()).isEqualTo("log");
 		assertThat(deployment.getResource())
@@ -69,22 +76,37 @@ public class StorageTests<K, V> {
 		assertThat(deployment.getDeploymentProperties()).hasSize(1).contains(entry("memory", "2048m"));
 		assertThat(deployment.getApplicationProperties()).hasSize(1).contains(entry("log.level", "WARN"));
 		System.out.println(deployment);
+
+	}
+
+	private String loadLogYaml() {
+		return new Scanner(StorageTests.class.getResourceAsStream("/old/log/deployments/log.yml"), "UTF-8")
+				.useDelimiter("\\A").next();
 	}
 
 	@Test
 	public void testReleaseStorage() {
-		Deployment deployment = DeploymentUtils.load("classpath:/log/deployments/log.yml");
-		int version = 1;
-		Release release = new Release(deployment, version);
-		release.setName("myLogRelease");
-		release.setFirstDeployed(ISO8601Utils.format(new Date(), true));
-		release.setStatus("Installing...");
-		assertThat(release.getDeployment()).isNotNull();
-		releaseRepository.save(release);
-		assertThat(release.getDeployment()).isNotNull();
-		Release retrievedRelease = releaseRepository.findOne(release.getId());
-		assertThat(retrievedRelease.getDeployment()).isNotNull();
 
+		String text = loadLogYaml();
+
+		Release release = new Release();
+		release.setName("log");
+		// release.setChart(installReleaseRequest.getChart());
+		// release.setConfig(installReleaseRequest.getConfigValues());
+		release.setVersion(1);
+
+		Info info = new Info();
+		info.setFirstDeployed(new Date());
+		info.setLastDeployed(new Date());
+		info.setStatus(Status.UNKNOWN);
+		info.setDescription("Inital install underway"); // Will be overwritten
+		release.setInfo(info);
+
+		release.setManifest(text);
+		releaseRepository.save(release);
+
+		Release retrievedRelease = releaseRepository.findOne(release.getId());
+		assertThat(retrievedRelease.getName()).isNotBlank();
 	}
 
 }

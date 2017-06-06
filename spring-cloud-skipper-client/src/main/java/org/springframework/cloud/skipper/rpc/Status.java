@@ -19,35 +19,24 @@ package org.springframework.cloud.skipper.rpc;
 /**
  * @author Mark Pollack
  */
-public class InstallReleaseRequest {
+public enum Status {
 
-	private Chart chart;
+	// Status_UNKNOWN indicates that a release is in an uncertain state.
+	UNKNOWN,
 
-	// Top level config values to overide form chart passed in via -f or --set when
-	// installing
-	// installing/upgrading
-	private Config configValues;
+	// Status_DEPLOYED indicates that the release has been pushed to Kubernetes.
+	DEPLOYED,
 
-	private String name;
+	// Status_DELETED indicates that a release has been deleted from Kubermetes.
+	DELETED,
 
-	public InstallReleaseRequest() {
-	}
+	// Status_SUPERSEDED indicates that this release object is outdated and a newer one
+	// exists.
+	SUPERSEDED,
 
-	public InstallReleaseRequest(String name, Chart chart, Config configValues) {
-		this.chart = chart;
-		this.configValues = configValues;
-		this.name = name;
-	}
+	// Status_FAILED indicates that the release was not successfully deployed.
+	FAILED,
 
-	public Chart getChart() {
-		return chart;
-	}
-
-	public Config getConfigValues() {
-		return configValues;
-	}
-
-	public String getName() {
-		return name;
-	}
+	// Status_DELETING indicates that a delete operation is underway.
+	DELETING
 }

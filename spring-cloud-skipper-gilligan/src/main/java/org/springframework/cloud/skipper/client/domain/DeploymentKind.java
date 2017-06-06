@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 the original author or authors.
+ * Copyright 2017 the original author or authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper.client;
 
-import org.springframework.data.repository.CrudRepository;
+package org.springframework.cloud.skipper.client.domain;
 
 /**
  * @author Mark Pollack
  */
-public interface ReleaseRepository extends CrudRepository<Release, String> {
+public class DeploymentKind {
+
+	private String kind;
+
+	private Deployment deployment;
+
+	public DeploymentKind() {
+	}
+
+	public String getKind() {
+		return kind;
+	}
+
+	public void setKind(String kind) {
+		this.kind = kind;
+	}
+
+	public Deployment getDeployment() {
+		return deployment;
+	}
+
+	public void setDeployment(Deployment deployment) {
+		this.deployment = deployment;
+	}
 }

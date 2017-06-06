@@ -16,12 +16,23 @@
 
 package org.springframework.cloud.skipper.rpc;
 
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+
 /**
  * Release describes a deployment of a chart, together with the chart and the variables
  * used to deploy that chart.
  * @author Mark Pollack
  */
+@RedisHash("releases")
 public class Release {
+
+	@Id
+	// For persistence purposes
+	private String id;
+
+	// Links a specifc app deployer deployment to this release
+	private String deploymentId;
 
 	private String name;
 
@@ -33,12 +44,14 @@ public class Release {
 	// These values override the default values inside of the chart.
 	private Config config;
 
-	private String version;
+	private String manifest;
+
+	private int version;
 
 	public Release() {
 	}
 
-	public Release(String name) {
+	public void setName(String name) {
 		this.name = name;
 	}
 
@@ -70,11 +83,35 @@ public class Release {
 		this.config = config;
 	}
 
-	public String getVersion() {
+	public String getManifest() {
+		return manifest;
+	}
+
+	public void setManifest(String manifest) {
+		this.manifest = manifest;
+	}
+
+	public int getVersion() {
 		return version;
 	}
 
-	public void setVersion(String version) {
+	public void setVersion(int version) {
 		this.version = version;
+	}
+
+	public String getId() {
+		return id;
+	}
+
+	public void setId(String id) {
+		this.id = id;
+	}
+
+	public String getDeploymentId() {
+		return deploymentId;
+	}
+
+	public void setDeploymentId(String deploymentId) {
+		this.deploymentId = deploymentId;
 	}
 }
