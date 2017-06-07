@@ -32,10 +32,7 @@ import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
 import org.springframework.cloud.skipper.rpc.*;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * @author Mark Pollack
@@ -60,7 +57,7 @@ public class GilliganController {
 	@PostMapping
 	@RequestMapping("/install")
 	@ResponseStatus(HttpStatus.CREATED)
-	public InstallReleaseResponse install(InstallReleaseRequest installReleaseRequest) {
+	public InstallReleaseResponse install(@RequestBody InstallReleaseRequest installReleaseRequest) {
 		Release release = prepareRelease(installReleaseRequest);
 		return performRelease(release);
 	}
@@ -87,7 +84,7 @@ public class GilliganController {
 		info.setFirstDeployed(new Date());
 		info.setLastDeployed(new Date());
 		info.setStatus(Status.UNKNOWN);
-		info.setDescription("Inital install underway"); // Will be overwritten
+		info.setDescription("Initial install underway"); // Will be overwritten
 		release.setInfo(info);
 
 		Template[] templates = installReleaseRequest.getChart().getTemplates();

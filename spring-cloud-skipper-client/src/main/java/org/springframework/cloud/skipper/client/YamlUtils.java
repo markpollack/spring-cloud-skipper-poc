@@ -25,6 +25,7 @@ import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Mark Pollack
@@ -44,17 +45,20 @@ public abstract class YamlUtils {
 		YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
 
 		Properties values;
-
-		try (InputStream is = new ByteArrayInputStream(templateString.getBytes())) {
-			yaml.setResources(new InputStreamResource(is));
-			yaml.afterPropertiesSet();
-			values = yaml.getObject();
+		if (StringUtils.hasText(templateString)) {
+			try (InputStream is = new ByteArrayInputStream(templateString.getBytes())) {
+				yaml.setResources(new InputStreamResource(is));
+				yaml.afterPropertiesSet();
+				values = yaml.getObject();
+			}
+			catch (Exception e) {
+				throw new IllegalArgumentException(
+						"Could not convert YAML to properties object from string " + templateString, e);
+			}
 		}
-		catch (Exception e) {
-			throw new IllegalArgumentException(
-					"Could not convert YAML to properties object from string " + templateString);
+		else {
+			values = new Properties();
 		}
-
 		return values;
 
 	}
