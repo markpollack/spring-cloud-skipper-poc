@@ -97,10 +97,14 @@ public class GilliganControllerTests<K, V> {
 		ObjectMapper mapper = new ObjectMapper();
 		InstallReleaseResponse installReleaseResponse = mapper.readValue(releaseResponseString,
 				InstallReleaseResponse.class);
-		assertThat(installReleaseResponse.getRelease().getInfo().getStatus()).isEqualByComparingTo(Status.DEPLOYED);
-		assertThat(installReleaseResponse.getRelease().getInfo().getDescription()).isEqualTo("Install complete");
-		String id = installReleaseResponse.getRelease().getId();
-		Release retrievedRelease = releaseRepository.findOne(id);
+
+		Release release = installReleaseResponse.getRelease();
+		assertThat(release.getName()).isNotBlank();
+		assertThat(release.getVersion()).isEqualTo(1);
+		assertThat(release.getInfo().getStatus()).isEqualByComparingTo(Status.DEPLOYED);
+		assertThat(release.getInfo().getDescription()).isEqualTo("Install complete");
+
+		Release retrievedRelease = releaseRepository.findOne(release.getId());
 		assertThat(retrievedRelease.getName()).isNotBlank();
 	}
 

@@ -90,7 +90,7 @@ public class GilliganController {
 		Template[] templates = installReleaseRequest.getChart().getTemplates();
 
 		// Resolve values in the template files.
-		Properties model = getModel(installReleaseRequest.getConfigValues().getRaw());
+		Properties model = mergeProperties(installReleaseRequest);
 
 		// Aggregate all valid manifests into one big doc.
 		StringBuilder sb = new StringBuilder();
@@ -113,6 +113,19 @@ public class GilliganController {
 		deploy(appDeployment, release);
 
 		return release;
+	}
+
+	private Properties mergeProperties(InstallReleaseRequest installReleaseRequest) {
+		Properties commandLineOverrideProperties = YamlUtils
+				.getProperties(installReleaseRequest.getConfigValues().getRaw());
+
+		Properties templateVariables = YamlUtils
+				.getProperties(installReleaseRequest.getChart().getConfigValues().getRaw());
+
+		Properties model = new Properties();
+		model.putAll(templateVariables);
+		model.putAll(commandLineOverrideProperties);
+		return model;
 	}
 
 	private void deploy(Deployment appDeployment, Release release) {
@@ -151,9 +164,5 @@ public class GilliganController {
 	// manifests, e);
 	// }
 	// }
-
-	private Properties getModel(String raw) {
-		return YamlUtils.getProperties(raw);
-	}
 
 }

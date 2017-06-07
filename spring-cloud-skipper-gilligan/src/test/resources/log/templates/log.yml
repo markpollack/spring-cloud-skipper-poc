@@ -1,12 +1,11 @@
 kind: Deployment
 deployment:
-  count: 2
+  count: {{count}}
   name: log
   applicationProperties:
     log.level: WARN
-  resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE
-#  resource: ${deployment.resource}
-  resourceMetadata: maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE
+  resource: {{application.resource}}
+  resourceMetadata: {{application.resourceMetadata}}
   deploymentProperties:
     memory: 2048m
 

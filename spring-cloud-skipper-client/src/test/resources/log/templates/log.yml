@@ -1,6 +1,6 @@
 kind: Deployment
 deployment:
-  count: 2
+  count: ${count}
   name: log
   applicationProperties:
     log.level: WARN

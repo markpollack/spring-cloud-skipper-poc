@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper.client.old;
+package org.springframework.cloud.skipper.gilligan.repository;
 
 import java.util.Date;
 import java.util.Scanner;
@@ -28,7 +28,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.skipper.client.domain.Deployment;
 import org.springframework.cloud.skipper.gilligan.GilliganApplication;
 import org.springframework.cloud.skipper.gilligan.controller.YmlUtils;
-import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
 import org.springframework.cloud.skipper.rpc.Info;
 import org.springframework.cloud.skipper.rpc.Release;
 import org.springframework.cloud.skipper.rpc.Status;
@@ -44,7 +43,7 @@ import static org.assertj.core.api.Assertions.entry;
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = GilliganApplication.class)
-public class StorageTests<K, V> {
+public class ReleaseRepositoryTests<K, V> {
 
 	@Autowired
 	private RedisOperations<K, V> operations;
@@ -80,7 +79,7 @@ public class StorageTests<K, V> {
 	}
 
 	private String loadLogYaml() {
-		return new Scanner(StorageTests.class.getResourceAsStream("/old/log/deployments/log.yml"), "UTF-8")
+		return new Scanner(ReleaseRepositoryTests.class.getResourceAsStream("/old/log/deployments/log.yml"), "UTF-8")
 				.useDelimiter("\\A").next();
 	}
 
