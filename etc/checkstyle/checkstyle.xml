@@ -88,10 +88,10 @@
         <!--<module name="AvoidStarImport"/>-->
 
 
-        <module name="AvoidStaticImport">
-            <property name="excludes"
-                      value="org.junit.Assert.*,org.mockito.Mockito.*,org.mockito.Matchers.*,org.hamcrest.Matchers.*,org.assertj.core.api.Assertions.*"/>
-        </module>
+        <!--<module name="AvoidStaticImport">-->
+        <!--<property name="excludes"-->
+        <!--value="org.junit.Assert.*,org.mockito.Mockito.*,org.mockito.Matchers.*,org.hamcrest.Matchers.*,org.assertj.core.api.Assertions.*,org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*,org.springframework.test.web.servlet.result.MockMvcResultMatchers.*"/>-->
+        <!--</module>-->
         <module name="FallThrough"/>
         <module name="ImportOrder">
             <property name="groups" value="java,/^javax?\./,*,org.springframework"/>

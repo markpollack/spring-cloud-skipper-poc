@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.rpc;
+package org.springframework.cloud.skipper.rpc.domain;
 
 import java.util.Date;
 
@@ -77,5 +77,11 @@ public class Info {
 
 	public void setDescription(String description) {
 		this.description = description;
+	}
+
+	@Override
+	public String toString() {
+		return "Info{" + "status=" + status + ", firstDeployed=" + firstDeployed + ", lastDeployed=" + lastDeployed
+				+ ", deleted=" + deleted + ", description='" + description + '\'' + '}';
 	}
 }

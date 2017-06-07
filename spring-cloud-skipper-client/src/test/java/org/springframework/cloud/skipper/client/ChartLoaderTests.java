@@ -21,9 +21,9 @@ import java.net.URL;
 
 import org.junit.Test;
 
-import org.springframework.cloud.skipper.rpc.Chart;
-import org.springframework.cloud.skipper.rpc.Metadata;
-import org.springframework.cloud.skipper.rpc.Template;
+import org.springframework.cloud.skipper.rpc.domain.Chart;
+import org.springframework.cloud.skipper.rpc.domain.Metadata;
+import org.springframework.cloud.skipper.rpc.domain.Template;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

@@ -22,7 +22,11 @@ import java.util.Properties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
 import org.springframework.cloud.skipper.gilligan.service.ReleaseService;
-import org.springframework.cloud.skipper.rpc.*;
+import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
+import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusRequest;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
+import org.springframework.cloud.skipper.rpc.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,6 +55,12 @@ public class GilliganController {
 		return performRelease(release);
 	}
 
+	@GetMapping
+	@RequestMapping("/status")
+	public ReleaseStatusResponse status(@RequestBody ReleaseStatusRequest releaseStatusRequest) {
+		return releaseService.status(releaseStatusRequest.getName(), releaseStatusRequest.getVersion());
+	}
+
 	private InstallReleaseResponse performRelease(Release release) {
 		InstallReleaseResponse response = new InstallReleaseResponse(release);
 		return response;
@@ -58,11 +68,28 @@ public class GilliganController {
 
 	private Release prepareRelease(InstallReleaseRequest installReleaseRequest) {
 
-		// Merge chart metadata, values, and install values into a map
-		// Render any template files based on map values and store back in chart object.
+		Release release = createInitialReleaseObject(installReleaseRequest);
 
-		// Enrich app properties based on "policies", e.g. metrics
+		// Resolve model values to render from the template file and command line values.
+		Properties model = releaseService.mergeConfigValues(installReleaseRequest.getConfigValues(),
+				installReleaseRequest.getChart().getConfigValues());
 
+		Template[] templates = installReleaseRequest.getChart().getTemplates();
+		String manifest = releaseService.createManifest(templates, model);
+		release.setManifest(manifest);
+
+		// Store in DB
+		releaseRepository.save(release);
+
+		// Store manifest in git?
+
+		// Deploy the application
+		releaseService.deploy(release);
+
+		return release;
+	}
+
+	private Release createInitialReleaseObject(InstallReleaseRequest installReleaseRequest) {
 		Release release = new Release();
 		release.setName(installReleaseRequest.getName());
 		release.setChart(installReleaseRequest.getChart());
@@ -72,29 +99,11 @@ public class GilliganController {
 		Info info = new Info();
 		info.setFirstDeployed(new Date());
 		info.setLastDeployed(new Date());
-		info.setStatus(Status.UNKNOWN);
+		Status status = new Status();
+		status.setStatusCode(StatusCode.UNKNOWN);
+		info.setStatus(status);
 		info.setDescription("Initial install underway"); // Will be overwritten
 		release.setInfo(info);
-
-		Template[] templates = installReleaseRequest.getChart().getTemplates();
-
-		// Resolve model values to render from the template file and command line values.
-		Properties model = releaseService.mergeConfigValues(installReleaseRequest.getConfigValues(),
-				installReleaseRequest.getChart().getConfigValues());
-
-		String manifest = releaseService.createManifest(templates, model);
-		release.setManifest(manifest);
-
-		// Store in DB
-		releaseRepository.save(release);
-
-		// Store in git?
-
-		// Deploy the application
-		releaseService.deploy(release);
-		// Store updated state in in DB
-		releaseRepository.save(release);
-
 		return release;
 	}
 

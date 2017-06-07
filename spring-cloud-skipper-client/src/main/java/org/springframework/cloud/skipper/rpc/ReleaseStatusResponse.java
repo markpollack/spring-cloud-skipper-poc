@@ -16,28 +16,40 @@
 
 package org.springframework.cloud.skipper.rpc;
 
+import org.springframework.cloud.skipper.rpc.domain.Info;
+
 /**
  * @author Mark Pollack
  */
-public class FileHolder {
+public class ReleaseStatusResponse {
 
-	private byte[] bytes;
-
+	// Name is the name of the release.
 	private String name;
 
-	public FileHolder() {
-	}
+	// Info contains information about the release.
+	private Info info;
 
-	public FileHolder(String name, byte[] bytes) {
-		this.bytes = bytes;
-		this.name = name;
-	}
-
-	public byte[] getBytes() {
-		return bytes;
+	public ReleaseStatusResponse() {
 	}
 
 	public String getName() {
 		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public Info getInfo() {
+		return info;
+	}
+
+	public void setInfo(Info info) {
+		this.info = info;
+	}
+
+	@Override
+	public String toString() {
+		return "ReleaseStatusResponse{" + "name='" + name + '\'' + ", info=" + info + '}';
 	}
 }

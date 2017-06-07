@@ -24,15 +24,17 @@ import com.samskivert.mustache.Mustache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.deployer.resource.support.DelegatingResourceLoader;
 import org.springframework.cloud.deployer.spi.app.AppDeployer;
+import org.springframework.cloud.deployer.spi.app.AppInstanceStatus;
+import org.springframework.cloud.deployer.spi.app.AppStatus;
+import org.springframework.cloud.deployer.spi.app.DeploymentState;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.cloud.skipper.client.YamlUtils;
 import org.springframework.cloud.skipper.client.domain.Deployment;
+import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
 import org.springframework.cloud.skipper.gilligan.util.YmlUtils;
-import org.springframework.cloud.skipper.rpc.Config;
-import org.springframework.cloud.skipper.rpc.Release;
-import org.springframework.cloud.skipper.rpc.Status;
-import org.springframework.cloud.skipper.rpc.Template;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
+import org.springframework.cloud.skipper.rpc.domain.*;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -47,8 +49,12 @@ public class ReleaseService {
 
 	private final DelegatingResourceLoader delegatingResourceLoader;
 
+	private final ReleaseRepository releaseRepository;
+
 	@Autowired
-	public ReleaseService(AppDeployer appDeployer, DelegatingResourceLoader delegatingResourceLoader) {
+	public ReleaseService(ReleaseRepository releaseRepository, AppDeployer appDeployer,
+			DelegatingResourceLoader delegatingResourceLoader) {
+		this.releaseRepository = releaseRepository;
 		this.appDeployer = appDeployer;
 		this.delegatingResourceLoader = delegatingResourceLoader;
 	}
@@ -102,7 +108,8 @@ public class ReleaseService {
 		// Deploy the application
 		Deployment appDeployment = YmlUtils.unmarshallDeployment(release.getManifest());
 		deploy(appDeployment, release);
-
+		// Store updated state in in DB
+		releaseRepository.save(release);
 	}
 
 	private void deploy(Deployment appDeployment, Release release) {
@@ -111,7 +118,9 @@ public class ReleaseService {
 		release.setDeploymentId(deploymentId);
 
 		// Store in DB
-		release.getInfo().setStatus(Status.DEPLOYED);
+		Status status = new Status();
+		status.setStatusCode(StatusCode.DEPLOYED);
+		release.getInfo().setStatus(status);
 		release.getInfo().setDescription("Install complete");
 	}
 
@@ -129,4 +138,74 @@ public class ReleaseService {
 
 	}
 
+	public ReleaseStatusResponse status(String releaseName, int version) {
+
+		Release requestedRelease = null;
+		if (version <= 0) {
+			requestedRelease = releaseRepository.findLatestRelease(releaseName);
+		}
+		else {
+			requestedRelease = releaseRepository.findByNameAndVersion(releaseName, version);
+		}
+		if (requestedRelease == null) {
+			throw new IllegalArgumentException("Could not find release with name " + releaseName);
+		}
+
+		Assert.notNull(requestedRelease.getInfo(),
+				"Release Info is missing for release name = " + releaseName + " version = " + version);
+		Assert.notNull(requestedRelease.getChart(),
+				"Release Chart is missing for release name = " + releaseName + " version = " + version);
+		calculateStatus(requestedRelease);
+
+		ReleaseStatusResponse releaseStatusResponse = new ReleaseStatusResponse();
+		releaseStatusResponse.setName(requestedRelease.getName());
+		releaseStatusResponse.setInfo(requestedRelease.getInfo());
+
+		return releaseStatusResponse;
+
+	}
+
+	// private Release getLatestRelease(String releaseName) {
+	// Iterable<Release> releases = releaseRepository.findAll();
+	// int lastVersion = 0;
+	// Release latestRelease = null;
+	// for (Release release : releases) {
+	// // Find the latest release
+	// if (release.getName().equals(releaseName)) {
+	// if (release.getVersion() > lastVersion) {
+	// lastVersion = release.getVersion();
+	// latestRelease = release;
+	// }
+	// }
+	// }
+	// return latestRelease;
+	// }
+
+	private void calculateStatus(Release release) {
+		// TODO put in background thread.
+		boolean allClear = true;
+
+		AppStatus status = appDeployer.status(release.getDeploymentId());
+		Map<String, AppInstanceStatus> instances = status.getInstances();
+		for (AppInstanceStatus appInstanceStatus : instances.values()) {
+			if (appInstanceStatus.getState() != DeploymentState.deployed) {
+				allClear = false;
+			}
+		}
+		if (allClear) {
+			release.getInfo().getStatus().setPlatformStatus("All Applications deployed successfully");
+			releaseRepository.save(release);
+		}
+		else {
+			StringBuffer stringBuffer = new StringBuffer();
+			stringBuffer.append("Not all applications deployed successfully. ");
+			for (AppInstanceStatus appInstanceStatus : instances.values()) {
+				stringBuffer.append(appInstanceStatus.getId()).append("=").append(appInstanceStatus.getState())
+						.append(", ");
+			}
+			release.getInfo().getStatus().setPlatformStatus(stringBuffer.toString());
+			releaseRepository.save(release);
+		}
+
+	}
 }

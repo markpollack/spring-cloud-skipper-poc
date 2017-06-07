@@ -28,9 +28,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.skipper.client.domain.Deployment;
 import org.springframework.cloud.skipper.gilligan.GilliganApplication;
 import org.springframework.cloud.skipper.gilligan.util.YmlUtils;
-import org.springframework.cloud.skipper.rpc.Info;
-import org.springframework.cloud.skipper.rpc.Release;
-import org.springframework.cloud.skipper.rpc.Status;
+import org.springframework.cloud.skipper.rpc.domain.Info;
+import org.springframework.cloud.skipper.rpc.domain.Release;
+import org.springframework.cloud.skipper.rpc.domain.Status;
+import org.springframework.cloud.skipper.rpc.domain.StatusCode;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -97,7 +98,9 @@ public class ReleaseRepositoryTests<K, V> {
 		Info info = new Info();
 		info.setFirstDeployed(new Date());
 		info.setLastDeployed(new Date());
-		info.setStatus(Status.UNKNOWN);
+		Status status = new Status();
+		status.setStatusCode(StatusCode.UNKNOWN);
+		info.setStatus(status);
 		info.setDescription("Inital install underway"); // Will be overwritten
 		release.setInfo(info);
 

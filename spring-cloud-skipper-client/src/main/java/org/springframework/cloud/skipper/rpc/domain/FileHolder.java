@@ -14,38 +14,30 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.rpc;
-
-import java.util.Map;
+package org.springframework.cloud.skipper.rpc.domain;
 
 /**
- * Config supplies values to the parametrizable templates of a chart.
- *
- * On the client side, it is a string of unparsed YAMl values.
  * @author Mark Pollack
  */
-public class Config {
+public class FileHolder {
 
-	private String raw;
+	private byte[] bytes;
 
-	private Map<String, String> values;
+	private String name;
 
-	public Config() {
+	public FileHolder() {
 	}
 
-	public String getRaw() {
-		return raw;
+	public FileHolder(String name, byte[] bytes) {
+		this.bytes = bytes;
+		this.name = name;
 	}
 
-	public void setRaw(String raw) {
-		this.raw = raw;
+	public byte[] getBytes() {
+		return bytes;
 	}
 
-	public Map<String, String> getValues() {
-		return values;
-	}
-
-	public void setValues(Map<String, String> values) {
-		this.values = values;
+	public String getName() {
+		return name;
 	}
 }

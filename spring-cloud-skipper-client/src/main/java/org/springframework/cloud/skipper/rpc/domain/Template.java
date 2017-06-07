@@ -14,16 +14,39 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.gilligan.repository;
-
-import org.springframework.cloud.skipper.rpc.domain.Release;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+package org.springframework.cloud.skipper.rpc.domain;
 
 /**
+ * Template represents a template as a name/value pair. By convention, name is a relative
+ * path within the scope of the chart's base directory.
+ *
  * @author Mark Pollack
+ *
  */
-@Repository
-public interface ReleaseRepository extends CrudRepository<Release, String>, CustomReleaseRepository {
+public class Template {
 
+	// Name is the path-like name of the template.
+	private String name;
+
+	// Data is the template as string data.
+	private String data;
+
+	public Template() {
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public String getData() {
+		return data;
+	}
+
+	public void setData(String data) {
+		this.data = data;
+	}
 }

@@ -17,13 +17,13 @@
 package org.springframework.cloud.skipper.gilligan.repository;
 
 import org.springframework.cloud.skipper.rpc.domain.Release;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
 
 /**
  * @author Mark Pollack
  */
-@Repository
-public interface ReleaseRepository extends CrudRepository<Release, String>, CustomReleaseRepository {
+public interface CustomReleaseRepository {
 
+	Release findLatestRelease(String releaseName);
+
+	Release findByNameAndVersion(String releaseName, int version);
 }

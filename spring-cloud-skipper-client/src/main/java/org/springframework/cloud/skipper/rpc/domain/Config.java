@@ -14,29 +14,38 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.rpc;
+package org.springframework.cloud.skipper.rpc.domain;
+
+import java.util.Map;
 
 /**
+ * Config supplies values to the parametrizable templates of a chart.
+ *
+ * On the client side, it is a string of unparsed YAMl values.
  * @author Mark Pollack
  */
-public enum Status {
+public class Config {
 
-	// Status_UNKNOWN indicates that a release is in an uncertain state.
-	UNKNOWN,
+	private String raw;
 
-	// Status_DEPLOYED indicates that the release has been pushed to Kubernetes.
-	DEPLOYED,
+	private Map<String, String> values;
 
-	// Status_DELETED indicates that a release has been deleted from Kubermetes.
-	DELETED,
+	public Config() {
+	}
 
-	// Status_SUPERSEDED indicates that this release object is outdated and a newer one
-	// exists.
-	SUPERSEDED,
+	public String getRaw() {
+		return raw;
+	}
 
-	// Status_FAILED indicates that the release was not successfully deployed.
-	FAILED,
+	public void setRaw(String raw) {
+		this.raw = raw;
+	}
 
-	// Status_DELETING indicates that a delete operation is underway.
-	DELETING
+	public Map<String, String> getValues() {
+		return values;
+	}
+
+	public void setValues(Map<String, String> values) {
+		this.values = values;
+	}
 }

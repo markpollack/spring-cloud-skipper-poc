@@ -14,16 +14,29 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.gilligan.repository;
-
-import org.springframework.cloud.skipper.rpc.domain.Release;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.stereotype.Repository;
+package org.springframework.cloud.skipper.rpc.domain;
 
 /**
  * @author Mark Pollack
  */
-@Repository
-public interface ReleaseRepository extends CrudRepository<Release, String>, CustomReleaseRepository {
+public enum StatusCode {
 
+	// Status_UNKNOWN indicates that a release is in an uncertain state.
+	UNKNOWN,
+
+	// Status_DEPLOYED indicates that the release has been pushed to Kubernetes.
+	DEPLOYED,
+
+	// Status_DELETED indicates that a release has been deleted from Kubermetes.
+	DELETED,
+
+	// Status_SUPERSEDED indicates that this release object is outdated and a newer one
+	// exists.
+	SUPERSEDED,
+
+	// Status_FAILED indicates that the release was not successfully deployed.
+	FAILED,
+
+	// Status_DELETING indicates that a delete operation is underway.
+	DELETING
 }

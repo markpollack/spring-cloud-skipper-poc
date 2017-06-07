@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.skipper.rpc;
 
+import org.springframework.cloud.skipper.rpc.domain.Release;
+
 /**
  * @author Mark Pollack
  */

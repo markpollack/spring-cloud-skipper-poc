@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.rpc;
+package org.springframework.cloud.skipper.rpc.domain;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;

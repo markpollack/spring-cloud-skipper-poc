@@ -21,12 +21,16 @@ import org.slf4j.LoggerFactory;
 
 import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
 import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusRequest;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestTemplate;
 
 /**
+ * Based off ReleaseServiceClient in tiller.pb.go
+ *
  * @author Mark Pollack
  */
 public class GilliganClient {
@@ -48,6 +52,13 @@ public class GilliganClient {
 		log.info("Posting to " + baseURI + "/install");
 		InstallReleaseResponse response = restTemplate.postForObject(baseURI + "/install", installReleaseRequest,
 				InstallReleaseResponse.class);
+		return response;
+	}
+
+	public ReleaseStatusResponse status(ReleaseStatusRequest releaseStatusRequest) {
+		log.info("Posting to " + baseURI + "/status");
+		ReleaseStatusResponse response = restTemplate.postForObject(baseURI + "/status", releaseStatusRequest,
+				ReleaseStatusResponse.class);
 		return response;
 	}
 

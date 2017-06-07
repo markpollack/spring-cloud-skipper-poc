@@ -27,10 +27,10 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.springframework.boot.bind.YamlConfigurationFactory;
-import org.springframework.cloud.skipper.rpc.Chart;
-import org.springframework.cloud.skipper.rpc.Config;
-import org.springframework.cloud.skipper.rpc.Metadata;
-import org.springframework.cloud.skipper.rpc.Template;
+import org.springframework.cloud.skipper.rpc.domain.Chart;
+import org.springframework.cloud.skipper.rpc.domain.Config;
+import org.springframework.cloud.skipper.rpc.domain.Metadata;
+import org.springframework.cloud.skipper.rpc.domain.Template;
 import org.springframework.core.io.FileSystemResource;
 
 /**

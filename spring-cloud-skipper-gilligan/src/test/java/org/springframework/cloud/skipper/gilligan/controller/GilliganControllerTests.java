@@ -25,14 +25,23 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.junit.runners.MethodSorters;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.skipper.client.ChartLoader;
 import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
-import org.springframework.cloud.skipper.rpc.*;
+import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
+import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusRequest;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
+import org.springframework.cloud.skipper.rpc.domain.Chart;
+import org.springframework.cloud.skipper.rpc.domain.Config;
+import org.springframework.cloud.skipper.rpc.domain.Release;
+import org.springframework.cloud.skipper.rpc.domain.StatusCode;
 import org.springframework.data.redis.connection.RedisConnection;
 import org.springframework.data.redis.core.RedisOperations;
 import org.springframework.http.MediaType;
@@ -53,7 +62,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @RunWith(SpringRunner.class)
 @SpringBootTest
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class GilliganControllerTests<K, V> {
+
+	private static String lastTestMethod;
+
+	private final MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
+			MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
+
+	private final String releaseName = "mylog";
 
 	@Autowired
 	private RedisOperations<K, V> operations;
@@ -66,8 +83,12 @@ public class GilliganControllerTests<K, V> {
 
 	private MockMvc mockMvc;
 
-	private final MediaType contentType = new MediaType(MediaType.APPLICATION_JSON.getType(),
-			MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
+	public static String convertObjectToJson(Object object) throws IOException {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+		String json = mapper.writeValueAsString(object);
+		return json;
+	}
 
 	@Before
 	public void setupMockMvc() {
@@ -75,18 +96,29 @@ public class GilliganControllerTests<K, V> {
 				.defaultRequest(get("/").accept(MediaType.APPLICATION_JSON)).build();
 	}
 
-	@Before
 	@After
-	public void setUp() {
-		operations.execute((RedisConnection connection) -> {
-			connection.flushDb();
-			return "OK";
-		});
+	public void setUpAfter() {
+		if (lastTestMethod.equals("t2status")) {
+			operations.execute((RedisConnection connection) -> {
+				connection.flushDb();
+				return "OK";
+			});
+		}
+	}
+
+	@Before
+	public void setUpBefore() {
+		if (lastTestMethod == null) {
+			operations.execute((RedisConnection connection) -> {
+				connection.flushDb();
+				return "OK";
+			});
+		}
 	}
 
 	@Test
-	public void testInstall() throws Exception {
-
+	public void t1Install() throws Exception {
+		lastTestMethod = "t1Install";
 		InstallReleaseRequest installReleaseRequest = createInstallReleaseRequest();
 		MvcResult result = mockMvc
 				.perform(post("/skipper/install").contentType(contentType)
@@ -102,7 +134,7 @@ public class GilliganControllerTests<K, V> {
 		Release release = installReleaseResponse.getRelease();
 		assertThat(release.getName()).isNotBlank();
 		assertThat(release.getVersion()).isEqualTo(1);
-		assertThat(release.getInfo().getStatus()).isEqualByComparingTo(Status.DEPLOYED);
+		assertThat(release.getInfo().getStatus().getStatusCode()).isEqualByComparingTo(StatusCode.DEPLOYED);
 		assertThat(release.getInfo().getDescription()).isEqualTo("Install complete");
 
 		// Test that Release object was stored.
@@ -113,8 +145,38 @@ public class GilliganControllerTests<K, V> {
 		assertThat(installReleaseResponse.getRelease().getManifest()).contains("count: 1");
 		assertThat(installReleaseResponse.getRelease().getManifest())
 				.contains("resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE");
-		assertThat(installReleaseResponse.getRelease().getManifest()).contains(
-				"resourceMetadata: maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE");
+		assertThat(installReleaseResponse.getRelease().getManifest()).contains("resourceMetadata: "
+				+ "maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE");
+
+	}
+
+	@Test
+	public void t2status() throws Exception {
+
+		lastTestMethod = "t2status";
+		ReleaseStatusResponse releaseStatusResponse = null;
+		for (int i = 0; i < 10; i++) {
+
+			ReleaseStatusRequest releaseStatusRequest = new ReleaseStatusRequest();
+			releaseStatusRequest.setName(releaseName);
+			releaseStatusRequest.setVersion(1);
+
+			InstallReleaseRequest installReleaseRequest = createInstallReleaseRequest();
+			MvcResult result = mockMvc
+					.perform(post("/skipper/status").contentType(contentType)
+							.content(convertObjectToJson(releaseStatusRequest)))
+					.andDo(print()).andExpect(status().isOk()).andReturn();
+			String releaseStatusResponseString = result.getResponse().getContentAsString();
+			// wait for deployment
+			ObjectMapper mapper = new ObjectMapper();
+			releaseStatusResponse = mapper.readValue(releaseStatusResponseString, ReleaseStatusResponse.class);
+
+			System.out.println("i = " + i + "status response = " + releaseStatusResponse);
+			System.out.println("----------------------------");
+			Thread.sleep(2000);
+		}
+		assertThat(releaseStatusResponse.getInfo().getStatus().getPlatformStatus())
+				.isEqualTo("All Applications deployed successfully");
 
 	}
 
@@ -125,15 +187,8 @@ public class GilliganControllerTests<K, V> {
 		File file = new File(url.getFile());
 		assertThat(file).exists();
 		Chart chart = chartLoader.load(file.getAbsolutePath());
-		InstallReleaseRequest request = new InstallReleaseRequest("mylog", chart, new Config());
+		InstallReleaseRequest request = new InstallReleaseRequest(releaseName, chart, new Config());
 		return request;
-	}
-
-	public static String convertObjectToJson(Object object) throws IOException {
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-		String json = mapper.writeValueAsString(object);
-		return json;
 	}
 
 }

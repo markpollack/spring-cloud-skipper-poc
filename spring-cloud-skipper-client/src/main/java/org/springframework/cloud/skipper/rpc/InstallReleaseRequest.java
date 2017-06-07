@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.skipper.rpc;
 
+import org.springframework.cloud.skipper.rpc.domain.Chart;
+import org.springframework.cloud.skipper.rpc.domain.Config;
+
 /**
  * @author Mark Pollack
  */

@@ -17,21 +17,17 @@
 package org.springframework.cloud.skipper.rpc;
 
 /**
- * Template represents a template as a name/value pair. By convention, name is a relative
- * path within the scope of the chart's base directory.
- *
  * @author Mark Pollack
- *
  */
-public class Template {
+public class ReleaseStatusRequest {
 
-	// Name is the path-like name of the template.
+	// Name is the name of the release
 	private String name;
 
-	// Data is the template as string data.
-	private String data;
+	// Version is the version of the release
+	private int version;
 
-	public Template() {
+	public ReleaseStatusRequest() {
 	}
 
 	public String getName() {
@@ -42,11 +38,11 @@ public class Template {
 		this.name = name;
 	}
 
-	public String getData() {
-		return data;
+	public int getVersion() {
+		return version;
 	}
 
-	public void setData(String data) {
-		this.data = data;
+	public void setVersion(int version) {
+		this.version = version;
 	}
 }

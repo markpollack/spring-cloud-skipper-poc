@@ -20,12 +20,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.skipper.rpc.*;
+import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
+import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusRequest;
+import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
+import org.springframework.cloud.skipper.rpc.domain.Chart;
+import org.springframework.cloud.skipper.rpc.domain.Config;
+import org.springframework.cloud.skipper.rpc.domain.Release;
 
 /**
  * @author Mark Pollack
  */
-public class InstallService {
+public class GilliganService {
 
 	private final GilliganClient gilliganClient;
 
@@ -33,10 +39,10 @@ public class InstallService {
 
 	private final ChartLoader chartLoader;
 
-	private static final Logger log = LoggerFactory.getLogger(InstallService.class);
+	private static final Logger log = LoggerFactory.getLogger(GilliganService.class);
 
 	@Autowired
-	public InstallService(GilliganClient gilliganClient, ChartResolver chartResolver, ChartLoader chartLoader) {
+	public GilliganService(GilliganClient gilliganClient, ChartResolver chartResolver, ChartLoader chartLoader) {
 		this.gilliganClient = gilliganClient;
 		this.chartResolver = chartResolver;
 		this.chartLoader = chartLoader;
@@ -58,6 +64,13 @@ public class InstallService {
 		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, chart, new Config());
 		InstallReleaseResponse response = gilliganClient.install(request);
 		return response.getRelease();
+	}
+
+	public ReleaseStatusResponse status(String releaseName, int version) {
+		ReleaseStatusRequest releaseStatusRequest = new ReleaseStatusRequest();
+		releaseStatusRequest.setName(releaseName);
+		releaseStatusRequest.setVersion(version);
+		return gilliganClient.status(releaseStatusRequest);
 	}
 
 	private String generateReleaseName() {

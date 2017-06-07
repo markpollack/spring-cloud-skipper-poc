@@ -18,7 +18,6 @@ package org.springframework.cloud.skipper.shell.command;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
-import org.springframework.cloud.skipper.rpc.domain.Release;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
@@ -28,17 +27,17 @@ import org.springframework.stereotype.Component;
  * @author Mark Pollack
  */
 @Component
-public class InstallCommand implements CommandMarker {
+public class StatusCommand implements CommandMarker {
 
 	@Autowired
 	private GilliganService installService;
 
-	@CliCommand("skipper install")
-	public String install(@CliOption(mandatory = true, key = { "", "chartName" }, help = "Chart name") String chartName,
-			@CliOption(key = "releaseName", help = "Release name") String releaseName) {
-
-		Release release = installService.install(chartName, releaseName);
-		return release.getName() + ":" + release.getVersion();
+	@CliCommand("skipper status")
+	public String status(
+			@CliOption(mandatory = true, key = { "", "releaseName" }, help = "Release name") String releaseName,
+			@CliOption(key = "version", help = "Release version") int releaseVersion) {
+		return installService.status(releaseName, releaseVersion).toString();
 
 	}
+
 }

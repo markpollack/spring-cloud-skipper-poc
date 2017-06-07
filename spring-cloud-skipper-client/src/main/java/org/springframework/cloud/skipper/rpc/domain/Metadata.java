@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.rpc;
+package org.springframework.cloud.skipper.rpc.domain;
 
 /**
  * Metadata for a Chart file. This models the structure of a Chart.yaml file.

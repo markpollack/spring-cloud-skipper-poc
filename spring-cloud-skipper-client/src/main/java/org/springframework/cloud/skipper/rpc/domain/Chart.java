@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.rpc;
+package org.springframework.cloud.skipper.rpc.domain;
 
 /**
  * Chart is a skipper package that contains metadata, a default config, zero or more
