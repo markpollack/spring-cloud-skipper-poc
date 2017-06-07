@@ -17,20 +17,12 @@
 package org.springframework.cloud.skipper.gilligan.controller;
 
 import java.util.Date;
-import java.util.Map;
 import java.util.Properties;
 
-import com.samskivert.mustache.Mustache;
-
-import org.springframework.cloud.deployer.resource.support.DelegatingResourceLoader;
-import org.springframework.cloud.deployer.spi.app.AppDeployer;
-import org.springframework.cloud.deployer.spi.core.AppDefinition;
-import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
-import org.springframework.cloud.skipper.client.YamlUtils;
-import org.springframework.cloud.skipper.client.domain.Deployment;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
+import org.springframework.cloud.skipper.gilligan.service.ReleaseService;
 import org.springframework.cloud.skipper.rpc.*;
-import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,17 +33,14 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/skipper")
 public class GilliganController {
 
-	private final AppDeployer appDeployer;
-
 	private final ReleaseRepository releaseRepository;
 
-	private final DelegatingResourceLoader delegatingResourceLoader;
+	private final ReleaseService releaseService;
 
-	public GilliganController(ReleaseRepository releaseRepository, AppDeployer appDeployer,
-			DelegatingResourceLoader delegatingResourceLoader) {
-		this.appDeployer = appDeployer;
+	@Autowired
+	public GilliganController(ReleaseService releaseService, ReleaseRepository releaseRepository) {
+		this.releaseService = releaseService;
 		this.releaseRepository = releaseRepository;
-		this.delegatingResourceLoader = delegatingResourceLoader;
 	}
 
 	@PostMapping
@@ -89,80 +78,24 @@ public class GilliganController {
 
 		Template[] templates = installReleaseRequest.getChart().getTemplates();
 
-		// Resolve values in the template files.
-		Properties model = mergeProperties(installReleaseRequest);
+		// Resolve model values to render from the template file and command line values.
+		Properties model = releaseService.mergeConfigValues(installReleaseRequest.getConfigValues(),
+				installReleaseRequest.getChart().getConfigValues());
 
-		// Aggregate all valid manifests into one big doc.
-		StringBuilder sb = new StringBuilder();
-		for (Template template : templates) {
-			String templateAsString = new String(template.getData());
-			com.samskivert.mustache.Template mustacheTemplate = Mustache.compiler().compile(templateAsString);
-			sb.append("\n---\n# Source: " + template.getName() + "\n");
-			sb.append(mustacheTemplate.execute(model));
-		}
-		String manifests = sb.toString();
-		release.setManifest(manifests);
+		String manifest = releaseService.createManifest(templates, model);
+		release.setManifest(manifest);
 
 		// Store in DB
 		releaseRepository.save(release);
 
 		// Store in git?
 
-		Deployment appDeployment = YmlUtils.unmarshallDeployment(manifests);
-
-		deploy(appDeployment, release);
+		// Deploy the application
+		releaseService.deploy(release);
+		// Store updated state in in DB
+		releaseRepository.save(release);
 
 		return release;
 	}
-
-	private Properties mergeProperties(InstallReleaseRequest installReleaseRequest) {
-		Properties commandLineOverrideProperties = YamlUtils
-				.getProperties(installReleaseRequest.getConfigValues().getRaw());
-
-		Properties templateVariables = YamlUtils
-				.getProperties(installReleaseRequest.getChart().getConfigValues().getRaw());
-
-		Properties model = new Properties();
-		model.putAll(templateVariables);
-		model.putAll(commandLineOverrideProperties);
-		return model;
-	}
-
-	private void deploy(Deployment appDeployment, Release release) {
-		String deploymentId = appDeployer.deploy(
-				createAppDeploymentRequest(appDeployment, release.getName(), String.valueOf(release.getVersion())));
-		release.setDeploymentId(deploymentId);
-
-		// Store in DB
-		release.getInfo().setStatus(Status.DEPLOYED);
-		release.getInfo().setDescription("Install complete");
-		releaseRepository.save(release);
-	}
-
-	private AppDeploymentRequest createAppDeploymentRequest(Deployment deployment, String releaseName, String version) {
-		AppDefinition appDefinition = new AppDefinition(deployment.getName(), deployment.getApplicationProperties());
-		Resource resource = delegatingResourceLoader.getResource(deployment.getResource());
-
-		Map<String, String> deploymentProperties = deployment.getDeploymentProperties();
-		deploymentProperties.put(AppDeployer.COUNT_PROPERTY_KEY, String.valueOf(deployment.getCount()));
-		deploymentProperties.put(AppDeployer.GROUP_PROPERTY_KEY, releaseName + "-v" + version);
-
-		AppDeploymentRequest appDeploymentRequest = new AppDeploymentRequest(appDefinition, resource,
-				deploymentProperties);
-		return appDeploymentRequest;
-
-	}
-
-	// private Deployment unmarshallDeployment(String manifests) {
-	// ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-	// try {
-	// Deployment deployment = mapper.readValue(manifests, Deployment.class);
-	// return deployment;
-	// }
-	// catch (IOException e) {
-	// throw new IllegalArgumentException("Could not map YAML to deployment. YAML = " +
-	// manifests, e);
-	// }
-	// }
 
 }

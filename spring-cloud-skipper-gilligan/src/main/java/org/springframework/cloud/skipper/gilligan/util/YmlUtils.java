@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.gilligan.controller;
+package org.springframework.cloud.skipper.gilligan.util;
 
 import java.io.IOException;
 

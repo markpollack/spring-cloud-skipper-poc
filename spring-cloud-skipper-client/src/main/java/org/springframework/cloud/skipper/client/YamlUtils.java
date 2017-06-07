@@ -41,19 +41,28 @@ public abstract class YamlUtils {
 		return values;
 	}
 
-	public static Properties getProperties(String templateString) {
+	/**
+	 * Return a Properties object given a String that contains YAML. The Properties
+	 * created by this factory have nested paths for hierarchical objects. All exposed
+	 * values are of type {@code String}</b> for access through the common
+	 * {@link Properties#getProperty} method. See YamlPropertiesFactoryBean for more
+	 * information.
+	 * @param yamlString String that contains YAML
+	 * @return properties object containing contents of YAML file
+	 */
+	public static Properties getProperties(String yamlString) {
 		YamlPropertiesFactoryBean yaml = new YamlPropertiesFactoryBean();
 
 		Properties values;
-		if (StringUtils.hasText(templateString)) {
-			try (InputStream is = new ByteArrayInputStream(templateString.getBytes())) {
+		if (StringUtils.hasText(yamlString)) {
+			try (InputStream is = new ByteArrayInputStream(yamlString.getBytes())) {
 				yaml.setResources(new InputStreamResource(is));
 				yaml.afterPropertiesSet();
 				values = yaml.getObject();
 			}
 			catch (Exception e) {
 				throw new IllegalArgumentException(
-						"Could not convert YAML to properties object from string " + templateString, e);
+						"Could not convert YAML to properties object from string " + yamlString, e);
 			}
 		}
 		else {

@@ -98,14 +98,24 @@ public class GilliganControllerTests<K, V> {
 		InstallReleaseResponse installReleaseResponse = mapper.readValue(releaseResponseString,
 				InstallReleaseResponse.class);
 
+		// Test release object is as expecte din terms of basic state.
 		Release release = installReleaseResponse.getRelease();
 		assertThat(release.getName()).isNotBlank();
 		assertThat(release.getVersion()).isEqualTo(1);
 		assertThat(release.getInfo().getStatus()).isEqualByComparingTo(Status.DEPLOYED);
 		assertThat(release.getInfo().getDescription()).isEqualTo("Install complete");
 
+		// Test that Release object was stored.
 		Release retrievedRelease = releaseRepository.findOne(release.getId());
 		assertThat(retrievedRelease.getName()).isNotBlank();
+
+		// Test that template values were replaced.
+		assertThat(installReleaseResponse.getRelease().getManifest()).contains("count: 1");
+		assertThat(installReleaseResponse.getRelease().getManifest())
+				.contains("resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE");
+		assertThat(installReleaseResponse.getRelease().getManifest()).contains(
+				"resourceMetadata: maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE");
+
 	}
 
 	private InstallReleaseRequest createInstallReleaseRequest() {

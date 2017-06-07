@@ -84,7 +84,7 @@ public class ChartLoader {
 		Template template = new Template();
 		template.setName(file.getName());
 		try {
-			template.setData(Files.readAllBytes(file.toPath()));
+			template.setData(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
 		}
 		catch (IOException e) {
 			throw new IllegalArgumentException("Could read template file " + file.getAbsoluteFile(), e);

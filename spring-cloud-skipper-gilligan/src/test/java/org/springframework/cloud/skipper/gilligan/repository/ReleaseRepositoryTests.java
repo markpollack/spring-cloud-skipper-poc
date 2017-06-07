@@ -27,7 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.skipper.client.domain.Deployment;
 import org.springframework.cloud.skipper.gilligan.GilliganApplication;
-import org.springframework.cloud.skipper.gilligan.controller.YmlUtils;
+import org.springframework.cloud.skipper.gilligan.util.YmlUtils;
 import org.springframework.cloud.skipper.rpc.Info;
 import org.springframework.cloud.skipper.rpc.Release;
 import org.springframework.cloud.skipper.rpc.Status;

@@ -28,8 +28,8 @@ public class Template {
 	// Name is the path-like name of the template.
 	private String name;
 
-	// Data is the template as byte data.
-	private byte[] data;
+	// Data is the template as string data.
+	private String data;
 
 	public Template() {
 	}
@@ -42,11 +42,11 @@ public class Template {
 		this.name = name;
 	}
 
-	public byte[] getData() {
+	public String getData() {
 		return data;
 	}
 
-	public void setData(byte[] data) {
+	public void setData(String data) {
 		this.data = data;
 	}
 }
