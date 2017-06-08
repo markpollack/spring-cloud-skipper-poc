@@ -67,12 +67,13 @@ public class GilliganController {
 	@RequestMapping("/update")
 	@ResponseStatus(HttpStatus.CREATED)
 	public UpdateReleaseResponse update(@RequestBody UpdateReleaseRequest updateReleaseRequest) {
+
 		Release release = releaseService.update(updateReleaseRequest.getName(), updateReleaseRequest.getChart(),
-				updateReleaseRequest.getConfigValues());
+				updateReleaseRequest.getConfigValues(), updateReleaseRequest.isResetValues(),
+				updateReleaseRequest.isReuseValues());
 
 		UpdateReleaseResponse updateReleaseResponse = new UpdateReleaseResponse();
 		updateReleaseResponse.setRelease(release);
-
 		return updateReleaseResponse;
 
 	}

@@ -32,6 +32,14 @@ public class UpdateReleaseRequest {
 	// A string containing (unparsed) YAML values.
 	private Config configValues;
 
+	// reuseValues will cause Gilligan to reuse the values from the last release.
+	// This is ignored if resetValues is set.
+	private boolean reuseValues;
+
+	// resetValues will cause Gilligan to ignore stored values, resetting to default
+	// values.
+	private boolean resetValues;
+
 	public UpdateReleaseRequest() {
 	}
 
@@ -57,5 +65,21 @@ public class UpdateReleaseRequest {
 
 	public void setConfigValues(Config configValues) {
 		this.configValues = configValues;
+	}
+
+	public boolean isReuseValues() {
+		return reuseValues;
+	}
+
+	public void setReuseValues(boolean reuseValues) {
+		this.reuseValues = reuseValues;
+	}
+
+	public boolean isResetValues() {
+		return resetValues;
+	}
+
+	public void setResetValues(boolean resetValues) {
+		this.resetValues = resetValues;
 	}
 }

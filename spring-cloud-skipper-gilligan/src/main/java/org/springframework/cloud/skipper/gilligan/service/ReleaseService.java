@@ -16,25 +16,22 @@
 
 package org.springframework.cloud.skipper.gilligan.service;
 
+import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Properties;
 
 import com.samskivert.mustache.Mustache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.yaml.snakeyaml.DumperOptions;
+import org.yaml.snakeyaml.Yaml;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.deployer.resource.support.DelegatingResourceLoader;
-import org.springframework.cloud.deployer.spi.app.AppDeployer;
-import org.springframework.cloud.deployer.spi.app.AppInstanceStatus;
-import org.springframework.cloud.deployer.spi.app.AppStatus;
-import org.springframework.cloud.deployer.spi.app.DeploymentState;
-import org.springframework.cloud.deployer.spi.core.AppDefinition;
-import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.cloud.skipper.client.YamlUtils;
-import org.springframework.cloud.skipper.client.domain.Deployment;
 import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
-import org.springframework.cloud.skipper.gilligan.util.YmlUtils;
+import org.springframework.cloud.skipper.gilligan.util.YmlMergeUtils;
 import org.springframework.cloud.skipper.rpc.domain.*;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
@@ -47,25 +44,29 @@ import org.springframework.util.Assert;
 @Service
 public class ReleaseService {
 
-	private final AppDeployer appDeployer;
-
-	private final DelegatingResourceLoader delegatingResourceLoader;
+	private static final Logger log = LoggerFactory.getLogger(ReleaseService.class);
 
 	private final ReleaseRepository releaseRepository;
 
+	private final ReleaseDeployer releaseDeployer;
+
+	private final UpdateStrategy updateStrategy;
+
 	@Autowired
-	public ReleaseService(ReleaseRepository releaseRepository, AppDeployer appDeployer,
-			DelegatingResourceLoader delegatingResourceLoader) {
+	public ReleaseService(ReleaseRepository releaseRepository, ReleaseDeployer releaseDeployer,
+			UpdateStrategy updateStrategy) {
 		this.releaseRepository = releaseRepository;
-		this.appDeployer = appDeployer;
-		this.delegatingResourceLoader = delegatingResourceLoader;
+		this.releaseDeployer = releaseDeployer;
+		this.updateStrategy = updateStrategy;
 	}
 
 	public Release install(Release release, Template[] templates, Config configValues) {
 
-		// Resolve model values to render from the template file and command line values.
-		Properties model = mergeConfigValues(configValues, release.getChart().getConfigValues());
+		// Resolve model values to render from the chart values file and command line
+		// values.
+		Properties model = mergeConfigValues(release.getChart().getConfigValues(), configValues);
 
+		// Render yaml resources
 		String manifest = createManifest(templates, model);
 		release.setManifest(manifest);
 
@@ -75,7 +76,7 @@ public class ReleaseService {
 		// Store manifest in git?
 
 		// Deploy the application
-		deploy(release);
+		releaseDeployer.deploy(release);
 
 		return release;
 
@@ -103,14 +104,83 @@ public class ReleaseService {
 				"Release Info is missing for release name = " + releaseName + " version = " + version);
 		Assert.notNull(requestedRelease.getChart(),
 				"Release Chart is missing for release name = " + releaseName + " version = " + version);
-		calculateStatus(requestedRelease);
+		releaseDeployer.calculateStatus(requestedRelease);
 
 		return requestedRelease;
 
 	}
 
-	public Release update(String name, Chart chart, Config configValues) {
+	public Release update(String name, Chart chart, Config configValues, boolean resetValues, boolean reuseValues) {
+		// No locking...
+		Release currentRelease = releaseRepository.findLatestRelease(name);
+
+		// Detemine if configValues should be updated to the current release's values
+		updateValues(chart, configValues, resetValues, reuseValues, currentRelease);
+
+		int revision = currentRelease.getVersion() + 1;
+
+		Properties model = mergeConfigValues(chart.getConfigValues(), configValues);
+
+		// Render yaml resources
+		String manifest = createManifest(chart.getTemplates(), model);
+
+		Release updatedRelease = new Release();
+		updatedRelease.setName(name);
+		updatedRelease.setChart(chart);
+		updatedRelease.setConfig(configValues);
+		Info info = new Info();
+		info.setFirstDeployed(currentRelease.getInfo().getFirstDeployed());
+		info.setLastDeployed(new Date());
+		info.getStatus().setStatusCode(StatusCode.UNKNOWN);
+		info.setDescription("Preparing upgrade");
+		updatedRelease.setInfo(info);
+		updatedRelease.setVersion(revision);
+		updatedRelease.setManifest(manifest);
+
+		// Store in DB
+		releaseRepository.save(updatedRelease);
+
+		updateStrategy.update(currentRelease, updatedRelease);
+
 		return null;
+	}
+
+	/**
+	 * Somewhat convoluted implementation to set the passed Config for update to be either
+	 * 1) those of the original chart if resetValues = true, 2) copy over previous values
+	 * if resuseValuses = true, and otherwise set to the currently deployed release values
+	 * if the Config for update is empty.
+	 * @param chart
+	 * @param configValues
+	 * @param resetValues
+	 * @param reuseValues
+	 * @param currentRelease
+	 */
+	private void updateValues(Chart chart, Config configValues, boolean resetValues, boolean reuseValues,
+			Release currentRelease) {
+		if (resetValues) {
+			log.info("Reset values to the chart's orginal version.");
+			return;
+		}
+		// If the ReuseValues flag is set, we always copy the old values over the new
+		// config's values.
+		if (reuseValues) {
+			log.info("Reusing the old release's values");
+
+			// second yml overwrites first yml argument
+			String oldMergedYml = mergeYml(currentRelease.getChart().getConfigValues().getRaw(),
+					currentRelease.getConfig().getRaw());
+			Config oldConfig = new Config();
+			oldConfig.setRaw(oldMergedYml);
+			chart.setConfigValues(oldConfig);
+		}
+
+		// If request config Values is empty, but current.Config is not, copy current into
+		// the request.
+		if ((configValues.isConfigEmpty()) && (!currentRelease.getConfig().isConfigEmpty())) {
+			log.info("Copying values from " + currentRelease.getName() + " + v(" + currentRelease.getVersion() + ")");
+			configValues = currentRelease.getConfig();
+		}
 	}
 
 	/**
@@ -140,12 +210,12 @@ public class ReleaseService {
 	 * Config object. If the "raw" data is empty or null, an empty property object is
 	 * returned.
 	 *
-	 * @param commandLineConfigValues YAML data passed at the application runtime
 	 * @param templateConfigValue YAML data defined in the template.yaml file
+	 * @param commandLineConfigValues YAML data passed at the application runtime
 	 * @return A Properties object that is the merger of both Config objects,
 	 * commandLineConfig values override values in templateConfig.
 	 */
-	private Properties mergeConfigValues(Config commandLineConfigValues, Config templateConfigValue) {
+	private Properties mergeConfigValues(Config templateConfigValue, Config commandLineConfigValues) {
 		Assert.notNull(commandLineConfigValues, "Config object for commandLine Config Values can't be null");
 		Assert.notNull(templateConfigValue, "Config object for template Config Values can't be null");
 
@@ -159,65 +229,27 @@ public class ReleaseService {
 	}
 
 	/**
-	 * Deploy the specified release
-	 * @param release the release to deploy
+	 * Values in the second, ovrerride those in the first.
+	 * @param firstYml
+	 * @param secondYml
+	 * @return merged yml
 	 */
-	private void deploy(Release release) {
-		// Deploy the application
-		Deployment appDeployment = YmlUtils.unmarshallDeployment(release.getManifest());
-		String deploymentId = appDeployer.deploy(
-				createAppDeploymentRequest(appDeployment, release.getName(), String.valueOf(release.getVersion())));
-		release.setDeploymentId(deploymentId);
+	private String mergeYml(String firstYml, String secondYml) {
+		final DumperOptions options = new DumperOptions();
+		options.setDefaultFlowStyle(DumperOptions.FlowStyle.FLOW);
+		options.setPrettyFlow(true);
+		Yaml yaml = new Yaml(options);
 
-		// Store in DB
-		Status status = new Status();
-		status.setStatusCode(StatusCode.DEPLOYED);
-		release.getInfo().setStatus(status);
-		release.getInfo().setDescription("Install complete");
+		Map<String, Object> mergedResult = new LinkedHashMap<String, Object>();
+		Map<String, Object> firstYmlMap = (Map<String, Object>) yaml.load(firstYml);
+		YmlMergeUtils mergeUtils = new YmlMergeUtils();
 
-		// Store updated state in in DB
-		releaseRepository.save(release);
-	}
+		mergeUtils.merge(mergedResult, firstYmlMap);
 
-	private void calculateStatus(Release release) {
-		// TODO put in background thread.
-		boolean allClear = true;
+		Map<String, Object> secondYmlMap = (Map<String, Object>) yaml.load(secondYml);
+		mergeUtils.merge(mergedResult, secondYmlMap);
 
-		AppStatus status = appDeployer.status(release.getDeploymentId());
-		Map<String, AppInstanceStatus> instances = status.getInstances();
-		for (AppInstanceStatus appInstanceStatus : instances.values()) {
-			if (appInstanceStatus.getState() != DeploymentState.deployed) {
-				allClear = false;
-			}
-		}
-		if (allClear) {
-			release.getInfo().getStatus().setPlatformStatus("All Applications deployed successfully");
-			releaseRepository.save(release);
-		}
-		else {
-			StringBuffer stringBuffer = new StringBuffer();
-			stringBuffer.append("Not all applications deployed successfully. ");
-			for (AppInstanceStatus appInstanceStatus : instances.values()) {
-				stringBuffer.append(appInstanceStatus.getId()).append("=").append(appInstanceStatus.getState())
-						.append(", ");
-			}
-			release.getInfo().getStatus().setPlatformStatus(stringBuffer.toString());
-			releaseRepository.save(release);
-		}
-
-	}
-
-	private AppDeploymentRequest createAppDeploymentRequest(Deployment deployment, String releaseName, String version) {
-		AppDefinition appDefinition = new AppDefinition(deployment.getName(), deployment.getApplicationProperties());
-		Resource resource = delegatingResourceLoader.getResource(deployment.getResource());
-
-		Map<String, String> deploymentProperties = deployment.getDeploymentProperties();
-		deploymentProperties.put(AppDeployer.COUNT_PROPERTY_KEY, String.valueOf(deployment.getCount()));
-		deploymentProperties.put(AppDeployer.GROUP_PROPERTY_KEY, releaseName + "-v" + version);
-
-		AppDeploymentRequest appDeploymentRequest = new AppDeploymentRequest(appDefinition, resource,
-				deploymentProperties);
-		return appDeploymentRequest;
+		return yaml.dump(mergedResult);
 	}
 
 }

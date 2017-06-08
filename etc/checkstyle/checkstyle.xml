@@ -82,7 +82,10 @@
         <module name="OneStatementPerLine"/>
         <module name="ExplicitInitialization"/>
 
+        <!-- TODO add back in -->
+        <!--
         <module name="ParameterAssignment"/>
+        -->
 
         <!-- Imports -->
         <!--<module name="AvoidStarImport"/>-->

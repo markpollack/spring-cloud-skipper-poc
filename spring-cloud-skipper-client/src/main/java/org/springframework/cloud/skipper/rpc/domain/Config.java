@@ -18,6 +18,10 @@ package org.springframework.cloud.skipper.rpc.domain;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import org.springframework.util.StringUtils;
+
 /**
  * Config supplies values to the parametrizable templates of a chart.
  *
@@ -47,5 +51,13 @@ public class Config {
 
 	public void setValues(Map<String, String> values) {
 		this.values = values;
+	}
+
+	@JsonIgnore
+	public boolean isConfigEmpty() {
+		if (values == null || StringUtils.isEmpty(raw)) {
+			return true;
+		}
+		return false;
 	}
 }

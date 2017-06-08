@@ -51,14 +51,6 @@ public class GilliganConfiguration {
 		return template;
 	}
 
-	// @Bean
-	// public Skipper skipper(ReleasePocV1Repository releaseRepository, AppDeployer
-	// appDeployer,
-	// DelegatingResourceLoader delegatingResourceLoader) {
-	// return new AppDeployerSkipper(releaseRepository, appDeployer,
-	// delegatingResourceLoader);
-	// }
-
 	@Bean
 	public MavenProperties mavenProperties() {
 		return new MavenConfigurationProperties();
@@ -73,14 +65,6 @@ public class GilliganConfiguration {
 		loaders.put("maven", mavenResourceLoader);
 		return new DelegatingResourceLoader(loaders);
 	}
-
-	// @Bean
-	// public GilliganController skipperController(ReleaseRepository releaseRepository,
-	// AppDeployer appDeployer,
-	// DelegatingResourceLoader delegatingResourceLoader) {
-	// return new GilliganController(releaseRepository, appDeployer,
-	// delegatingResourceLoader);
-	// }
 
 	@ConfigurationProperties(prefix = "maven")
 	static class MavenConfigurationProperties extends MavenProperties {
