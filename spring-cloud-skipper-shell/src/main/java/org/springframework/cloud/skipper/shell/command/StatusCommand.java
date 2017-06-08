@@ -30,13 +30,13 @@ import org.springframework.stereotype.Component;
 public class StatusCommand implements CommandMarker {
 
 	@Autowired
-	private GilliganService installService;
+	private GilliganService gilliganService;
 
 	@CliCommand("skipper status")
 	public String status(
 			@CliOption(mandatory = true, key = { "", "releaseName" }, help = "Release name") String releaseName,
 			@CliOption(key = "version", help = "Release version") int releaseVersion) {
-		return installService.status(releaseName, releaseVersion).toString();
+		return gilliganService.status(releaseName, releaseVersion).toString();
 
 	}
 

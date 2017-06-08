@@ -20,15 +20,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
-import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusRequest;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
+import org.springframework.cloud.skipper.rpc.*;
 import org.springframework.cloud.skipper.rpc.domain.Chart;
 import org.springframework.cloud.skipper.rpc.domain.Config;
 import org.springframework.cloud.skipper.rpc.domain.Release;
 
 /**
+ * The high level client API that communicates with the Gilligan Server.
+ *
+ * Uses the GilliganClient.
+ *
  * @author Mark Pollack
  */
 public class GilliganService {
@@ -48,7 +49,7 @@ public class GilliganService {
 		this.chartLoader = chartLoader;
 	}
 
-	public Release install(String chartName, String releaseName) {
+	public Release install(String chartPath, String releaseName) {
 
 		String releaseNameToUse;
 		if (releaseName == null) {
@@ -58,8 +59,9 @@ public class GilliganService {
 			releaseNameToUse = releaseName;
 		}
 
-		String chartPath = chartResolver.resolve(chartName);
-		Chart chart = chartLoader.load(chartPath);
+		String resolvedChartPath = chartResolver.resolve(chartPath);
+
+		Chart chart = chartLoader.load(resolvedChartPath);
 
 		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, chart, new Config());
 		InstallReleaseResponse response = gilliganClient.install(request);
@@ -71,6 +73,21 @@ public class GilliganService {
 		releaseStatusRequest.setName(releaseName);
 		releaseStatusRequest.setVersion(version);
 		return gilliganClient.status(releaseStatusRequest);
+	}
+
+	public Release upgrade(String chartPath, String releaseName, int releaseVersion) {
+
+		// Note, releaseVersion is not used now as we only support local paths. Is used
+		// when getting chart
+		// from the chart repository.
+		String resolvedChartPath = chartResolver.resolve(chartPath);
+		Chart chart = chartLoader.load(resolvedChartPath);
+
+		UpdateReleaseRequest updateReleaseRequest = new UpdateReleaseRequest();
+		updateReleaseRequest.setChart(chart);
+		updateReleaseRequest.setName(releaseName);
+		return gilliganClient.update(updateReleaseRequest).getRelease();
+
 	}
 
 	private String generateReleaseName() {

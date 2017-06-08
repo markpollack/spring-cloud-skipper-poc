@@ -19,16 +19,15 @@ package org.springframework.cloud.skipper.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
-import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusRequest;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
+import org.springframework.cloud.skipper.rpc.*;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.Assert;
 import org.springframework.web.client.RestTemplate;
 
 /**
+ * Client API that uses RestTemplate to communicate with the Gilligan Server
+ *
  * Based off ReleaseServiceClient in tiller.pb.go
  *
  * @author Mark Pollack
@@ -59,6 +58,13 @@ public class GilliganClient {
 		log.info("Posting to " + baseURI + "/status");
 		ReleaseStatusResponse response = restTemplate.postForObject(baseURI + "/status", releaseStatusRequest,
 				ReleaseStatusResponse.class);
+		return response;
+	}
+
+	public UpdateReleaseResponse update(UpdateReleaseRequest updateReleaseRequest) {
+		log.info("Posting to " + baseURI + "/update");
+		UpdateReleaseResponse response = restTemplate.postForObject(baseURI + "/update", updateReleaseRequest,
+				UpdateReleaseResponse.class);
 		return response;
 	}
 

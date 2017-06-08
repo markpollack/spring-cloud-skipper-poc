@@ -17,15 +17,11 @@
 package org.springframework.cloud.skipper.gilligan.controller;
 
 import java.util.Date;
-import java.util.Properties;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
 import org.springframework.cloud.skipper.gilligan.service.ReleaseService;
-import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
-import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusRequest;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
+import org.springframework.cloud.skipper.rpc.*;
 import org.springframework.cloud.skipper.rpc.domain.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -52,41 +48,40 @@ public class GilliganController {
 	@ResponseStatus(HttpStatus.CREATED)
 	public InstallReleaseResponse install(@RequestBody InstallReleaseRequest installReleaseRequest) {
 		Release release = prepareRelease(installReleaseRequest);
-		return performRelease(release);
+		InstallReleaseResponse response = new InstallReleaseResponse(release);
+		return response;
 	}
 
 	@GetMapping
 	@RequestMapping("/status")
 	public ReleaseStatusResponse status(@RequestBody ReleaseStatusRequest releaseStatusRequest) {
-		return releaseService.status(releaseStatusRequest.getName(), releaseStatusRequest.getVersion());
+
+		Release release = releaseService.status(releaseStatusRequest.getName(), releaseStatusRequest.getVersion());
+		ReleaseStatusResponse releaseStatusResponse = new ReleaseStatusResponse();
+		releaseStatusResponse.setName(release.getName());
+		releaseStatusResponse.setInfo(release.getInfo());
+		return releaseStatusResponse;
 	}
 
-	private InstallReleaseResponse performRelease(Release release) {
-		InstallReleaseResponse response = new InstallReleaseResponse(release);
-		return response;
+	@PostMapping
+	@RequestMapping("/update")
+	@ResponseStatus(HttpStatus.CREATED)
+	public UpdateReleaseResponse update(@RequestBody UpdateReleaseRequest updateReleaseRequest) {
+		Release release = releaseService.update(updateReleaseRequest.getName(), updateReleaseRequest.getChart(),
+				updateReleaseRequest.getConfigValues());
+
+		UpdateReleaseResponse updateReleaseResponse = new UpdateReleaseResponse();
+		updateReleaseResponse.setRelease(release);
+
+		return updateReleaseResponse;
+
 	}
 
 	private Release prepareRelease(InstallReleaseRequest installReleaseRequest) {
-
 		Release release = createInitialReleaseObject(installReleaseRequest);
-
-		// Resolve model values to render from the template file and command line values.
-		Properties model = releaseService.mergeConfigValues(installReleaseRequest.getConfigValues(),
-				installReleaseRequest.getChart().getConfigValues());
-
+		Config configValues = installReleaseRequest.getConfigValues();
 		Template[] templates = installReleaseRequest.getChart().getTemplates();
-		String manifest = releaseService.createManifest(templates, model);
-		release.setManifest(manifest);
-
-		// Store in DB
-		releaseRepository.save(release);
-
-		// Store manifest in git?
-
-		// Deploy the application
-		releaseService.deploy(release);
-
-		return release;
+		return releaseService.install(release, templates, configValues);
 	}
 
 	private Release createInitialReleaseObject(InstallReleaseRequest installReleaseRequest) {

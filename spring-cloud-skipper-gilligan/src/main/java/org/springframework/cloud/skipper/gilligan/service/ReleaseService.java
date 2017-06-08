@@ -33,13 +33,15 @@ import org.springframework.cloud.skipper.client.YamlUtils;
 import org.springframework.cloud.skipper.client.domain.Deployment;
 import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
 import org.springframework.cloud.skipper.gilligan.util.YmlUtils;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
 import org.springframework.cloud.skipper.rpc.domain.*;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
 
 /**
+ * Performs release operations based on method signatures independent of skipper.rpc data
+ * types
+ *
  * @author Mark Pollack
  */
 @Service
@@ -59,87 +61,33 @@ public class ReleaseService {
 		this.delegatingResourceLoader = delegatingResourceLoader;
 	}
 
-	/**
-	 * Will merge the properties, derived from YAML formst, contained in
-	 * commandLineConfigValues and templateConfigValue, giving preference to
-	 * commandLineConfigValues. Assumes that the YAML is stored as "raw" data in the
-	 * Config object. If the "raw" data is empty or null, an empty property object is
-	 * returned.
-	 *
-	 * @param commandLineConfigValues YAML data passed at the application runtime
-	 * @param templateConfigValue YAML data defined in the template.yaml file
-	 * @return A Properties object that is the merger of both Config objects,
-	 * commandLineConfig values override values in templateConfig.
-	 */
-	public Properties mergeConfigValues(Config commandLineConfigValues, Config templateConfigValue) {
-		Assert.notNull(commandLineConfigValues, "Config object for commandLine Config Values can't be null");
-		Assert.notNull(templateConfigValue, "Config object for template Config Values can't be null");
+	public Release install(Release release, Template[] templates, Config configValues) {
 
-		Properties commandLineOverrideProperties = YamlUtils.getProperties(commandLineConfigValues.getRaw());
-		Properties templateVariables = YamlUtils.getProperties(templateConfigValue.getRaw());
+		// Resolve model values to render from the template file and command line values.
+		Properties model = mergeConfigValues(configValues, release.getChart().getConfigValues());
 
-		Properties model = new Properties();
-		model.putAll(templateVariables);
-		model.putAll(commandLineOverrideProperties);
-		return model;
-	}
-
-	/**
-	 * Iterate overall the template files, replacing placeholders with model values. One
-	 * string is returned that contain all the YAML of multiple files using YAML file
-	 * delimiter.
-	 * @param templates YAML with placeholders to replace
-	 * @param model The placeholder values.
-	 * @return A YAML string containing all the templates with replaced values.
-	 */
-	public String createManifest(Template[] templates, Properties model) {
-		// Aggregate all valid manifests into one big doc.
-		StringBuilder sb = new StringBuilder();
-		for (Template template : templates) {
-			String templateAsString = new String(template.getData());
-			com.samskivert.mustache.Template mustacheTemplate = Mustache.compiler().compile(templateAsString);
-			sb.append("\n---\n# Source: " + template.getName() + "\n");
-			sb.append(mustacheTemplate.execute(model));
-		}
-		return sb.toString();
-	}
-
-	public void deploy(Release release) {
-		// Deploy the application
-		Deployment appDeployment = YmlUtils.unmarshallDeployment(release.getManifest());
-		deploy(appDeployment, release);
-		// Store updated state in in DB
-		releaseRepository.save(release);
-	}
-
-	private void deploy(Deployment appDeployment, Release release) {
-		String deploymentId = appDeployer.deploy(
-				createAppDeploymentRequest(appDeployment, release.getName(), String.valueOf(release.getVersion())));
-		release.setDeploymentId(deploymentId);
+		String manifest = createManifest(templates, model);
+		release.setManifest(manifest);
 
 		// Store in DB
-		Status status = new Status();
-		status.setStatusCode(StatusCode.DEPLOYED);
-		release.getInfo().setStatus(status);
-		release.getInfo().setDescription("Install complete");
-	}
+		releaseRepository.save(release);
 
-	private AppDeploymentRequest createAppDeploymentRequest(Deployment deployment, String releaseName, String version) {
-		AppDefinition appDefinition = new AppDefinition(deployment.getName(), deployment.getApplicationProperties());
-		Resource resource = delegatingResourceLoader.getResource(deployment.getResource());
+		// Store manifest in git?
 
-		Map<String, String> deploymentProperties = deployment.getDeploymentProperties();
-		deploymentProperties.put(AppDeployer.COUNT_PROPERTY_KEY, String.valueOf(deployment.getCount()));
-		deploymentProperties.put(AppDeployer.GROUP_PROPERTY_KEY, releaseName + "-v" + version);
+		// Deploy the application
+		deploy(release);
 
-		AppDeploymentRequest appDeploymentRequest = new AppDeploymentRequest(appDefinition, resource,
-				deploymentProperties);
-		return appDeploymentRequest;
+		return release;
 
 	}
 
-	public ReleaseStatusResponse status(String releaseName, int version) {
-
+	/**
+	 * Return the status of the specified release
+	 * @param releaseName name of the release
+	 * @param version version of the release, find the latest release if 0
+	 * @return the status of the specified release
+	 */
+	public Release status(String releaseName, int version) {
 		Release requestedRelease = null;
 		if (version <= 0) {
 			requestedRelease = releaseRepository.findLatestRelease(releaseName);
@@ -157,29 +105,79 @@ public class ReleaseService {
 				"Release Chart is missing for release name = " + releaseName + " version = " + version);
 		calculateStatus(requestedRelease);
 
-		ReleaseStatusResponse releaseStatusResponse = new ReleaseStatusResponse();
-		releaseStatusResponse.setName(requestedRelease.getName());
-		releaseStatusResponse.setInfo(requestedRelease.getInfo());
-
-		return releaseStatusResponse;
+		return requestedRelease;
 
 	}
 
-	// private Release getLatestRelease(String releaseName) {
-	// Iterable<Release> releases = releaseRepository.findAll();
-	// int lastVersion = 0;
-	// Release latestRelease = null;
-	// for (Release release : releases) {
-	// // Find the latest release
-	// if (release.getName().equals(releaseName)) {
-	// if (release.getVersion() > lastVersion) {
-	// lastVersion = release.getVersion();
-	// latestRelease = release;
-	// }
-	// }
-	// }
-	// return latestRelease;
-	// }
+	public Release update(String name, Chart chart, Config configValues) {
+		return null;
+	}
+
+	/**
+	 * Iterate overall the template files, replacing placeholders with model values. One
+	 * string is returned that contain all the YAML of multiple files using YAML file
+	 * delimiter.
+	 * @param templates YAML with placeholders to replace
+	 * @param model The placeholder values.
+	 * @return A YAML string containing all the templates with replaced values.
+	 */
+	private String createManifest(Template[] templates, Properties model) {
+		// Aggregate all valid manifests into one big doc.
+		StringBuilder sb = new StringBuilder();
+		for (Template template : templates) {
+			String templateAsString = new String(template.getData());
+			com.samskivert.mustache.Template mustacheTemplate = Mustache.compiler().compile(templateAsString);
+			sb.append("\n---\n# Source: " + template.getName() + "\n");
+			sb.append(mustacheTemplate.execute(model));
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * Will merge the properties, derived from YAML formst, contained in
+	 * commandLineConfigValues and templateConfigValue, giving preference to
+	 * commandLineConfigValues. Assumes that the YAML is stored as "raw" data in the
+	 * Config object. If the "raw" data is empty or null, an empty property object is
+	 * returned.
+	 *
+	 * @param commandLineConfigValues YAML data passed at the application runtime
+	 * @param templateConfigValue YAML data defined in the template.yaml file
+	 * @return A Properties object that is the merger of both Config objects,
+	 * commandLineConfig values override values in templateConfig.
+	 */
+	private Properties mergeConfigValues(Config commandLineConfigValues, Config templateConfigValue) {
+		Assert.notNull(commandLineConfigValues, "Config object for commandLine Config Values can't be null");
+		Assert.notNull(templateConfigValue, "Config object for template Config Values can't be null");
+
+		Properties commandLineOverrideProperties = YamlUtils.getProperties(commandLineConfigValues.getRaw());
+		Properties templateVariables = YamlUtils.getProperties(templateConfigValue.getRaw());
+
+		Properties model = new Properties();
+		model.putAll(templateVariables);
+		model.putAll(commandLineOverrideProperties);
+		return model;
+	}
+
+	/**
+	 * Deploy the specified release
+	 * @param release the release to deploy
+	 */
+	private void deploy(Release release) {
+		// Deploy the application
+		Deployment appDeployment = YmlUtils.unmarshallDeployment(release.getManifest());
+		String deploymentId = appDeployer.deploy(
+				createAppDeploymentRequest(appDeployment, release.getName(), String.valueOf(release.getVersion())));
+		release.setDeploymentId(deploymentId);
+
+		// Store in DB
+		Status status = new Status();
+		status.setStatusCode(StatusCode.DEPLOYED);
+		release.getInfo().setStatus(status);
+		release.getInfo().setDescription("Install complete");
+
+		// Store updated state in in DB
+		releaseRepository.save(release);
+	}
 
 	private void calculateStatus(Release release) {
 		// TODO put in background thread.
@@ -208,4 +206,18 @@ public class ReleaseService {
 		}
 
 	}
+
+	private AppDeploymentRequest createAppDeploymentRequest(Deployment deployment, String releaseName, String version) {
+		AppDefinition appDefinition = new AppDefinition(deployment.getName(), deployment.getApplicationProperties());
+		Resource resource = delegatingResourceLoader.getResource(deployment.getResource());
+
+		Map<String, String> deploymentProperties = deployment.getDeploymentProperties();
+		deploymentProperties.put(AppDeployer.COUNT_PROPERTY_KEY, String.valueOf(deployment.getCount()));
+		deploymentProperties.put(AppDeployer.GROUP_PROPERTY_KEY, releaseName + "-v" + version);
+
+		AppDeploymentRequest appDeploymentRequest = new AppDeploymentRequest(appDefinition, resource,
+				deploymentProperties);
+		return appDeploymentRequest;
+	}
+
 }
