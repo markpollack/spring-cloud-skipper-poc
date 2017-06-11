@@ -35,20 +35,49 @@ public class ChartLoaderTests {
 	@Test
 	public void chartLoading() {
 		ChartLoader chartLoader = new ChartLoader();
-		URL url = this.getClass().getResource("/log");
+		File file = getFile("/log");
+		Chart chart = chartLoader.load(file.getAbsolutePath());
+		assertThat(chart.getConfigValues().getRaw()).contains("1024m");
+		Metadata metadata = chart.getMetadata();
+		assertLogMetadata(metadata);
+		Template template = chart.getTemplates()[0];
+		assertThat(template.getName()).isEqualTo("log.yml");
+		assertThat(template.getData()).isNotEmpty();
+	}
+
+	@Test
+	public void chartWithSubcharts() {
+		ChartLoader chartLoader = new ChartLoader();
+		File file = getFile("/ticktock");
+		Chart chart = chartLoader.load(file.getAbsolutePath());
+		assertThat(chart.getDependencies()).hasSize(2);
+		Metadata logMetadata = chart.getDependencies()[0].getMetadata();
+		assertLogMetadata(logMetadata);
+		Metadata timeMetadata = chart.getDependencies()[1].getMetadata();
+		assertTimeMetadata(timeMetadata);
+	}
+
+	private File getFile(String directoryName) {
+		URL url = this.getClass().getResource(directoryName);
 		assertThat(url).isNotNull();
 		File file = new File(url.getFile());
 		assertThat(file).exists();
-		Chart chart = chartLoader.load(file.getAbsolutePath());
-		Metadata metadata = chart.getMetadata();
+		return file;
+	}
+
+	private void assertLogMetadata(Metadata metadata) {
 		assertThat(metadata.getName()).isEqualTo("log");
 		assertThat(metadata.getVersion()).isEqualTo("1.2.0");
 		assertThat(metadata.getDescription()).isEqualTo("Logs payload to the console");
 		assertThat(metadata.getKeywords()).contains("logging");
 		assertThat(metadata.getHome()).isEqualTo("https://github.com/spring-cloud-stream-app-starters/log");
-		assertThat(chart.getConfigValues().getRaw()).contains("1024m");
-		Template template = chart.getTemplates()[0];
-		assertThat(template.getName()).isEqualTo("log.yml");
-		assertThat(template.getData()).isNotEmpty();
+	}
+
+	private void assertTimeMetadata(Metadata metadata) {
+		assertThat(metadata.getName()).isEqualTo("time");
+		assertThat(metadata.getVersion()).isEqualTo("1.2.0");
+		assertThat(metadata.getDescription()).isEqualTo("Send time payload to output channel");
+		assertThat(metadata.getKeywords()).contains("time");
+		assertThat(metadata.getHome()).isEqualTo("https://github.com/spring-cloud-stream-app-starters/time");
 	}
 }

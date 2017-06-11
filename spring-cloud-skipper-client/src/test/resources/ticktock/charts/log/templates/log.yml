@@ -1,0 +1,10 @@
+kind: Deployment
+deployment:
+  name: log
+  applicationProperties:
+    log.level: WARN
+  resource: {{resources.log.resourceAndGroupName}}:{{resources.log.version}}
+  resourceMetadata: {{resources.log.resourceAndGroupName}}:jar:metadata:{{resources.log.version}}
+  deploymentProperties:
+    memory: {{resources.requests.memory}}
+

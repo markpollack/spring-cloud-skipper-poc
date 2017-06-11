@@ -1,0 +1,11 @@
+# These are arbitrary keys that match placeholders in log.yml and time.yml
+resources:
+  log:
+    resourceGroupAndName: maven://org.springframework.cloud.stream.app:log-sink-rabbit
+    version: 1.2.0.RELEASE
+  time:
+    resourceGroupAndName: maven://org.springframework.cloud.stream.app:time-source-rabbit
+    version: 1.2.0.RELEASE
+resources:
+  requests:
+    memory: 1024m

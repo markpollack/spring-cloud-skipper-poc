@@ -1,0 +1,6 @@
+name: log
+version: 1.2.0
+description: Logs payload to the console
+keywords:
+  - logging
+home: https://github.com/spring-cloud-stream-app-starters/log

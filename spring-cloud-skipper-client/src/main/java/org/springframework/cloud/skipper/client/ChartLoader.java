@@ -41,7 +41,7 @@ public class ChartLoader {
 	public Chart load(String path) {
 
 		List<File> files;
-		try (Stream<Path> paths = Files.walk(Paths.get(path))) {
+		try (Stream<Path> paths = Files.walk(Paths.get(path), 1)) {
 			files = paths.map(i -> i.toAbsolutePath().toFile()).collect(Collectors.toList());
 		}
 		catch (IOException e) {
@@ -53,18 +53,27 @@ public class ChartLoader {
 		for (File file : files) {
 			if (file.getName().equalsIgnoreCase("Chart.yaml") || file.getName().equalsIgnoreCase("chart.yml")) {
 				chart.setMetadata(loadChartMetadata(file));
+				continue;
 			}
 			if (file.getName().equalsIgnoreCase("values.yaml") || file.getName().equalsIgnoreCase("values.yml")) {
 				chart.setConfigValues(loadConfigValues(file));
+				continue;
 			}
-			if (file.getAbsoluteFile().toString().contains("templates/")) {
-				templates.add(loadTemplate(file));
-
+			String absFileName = file.getAbsoluteFile().toString();
+			if (absFileName.endsWith("/templates")) {
+				chart.setTemplates(loadTemplates(file));
+				continue;
+			}
+			if (absFileName.endsWith("/charts")) {
+				File[] directories = new File(file.getAbsolutePath()).listFiles(File::isDirectory);
+				List<Chart> dependentCharts = new ArrayList<>();
+				for (int i = 0; i < directories.length; i++) {
+					dependentCharts.add(load(directories[i].getAbsolutePath()));
+				}
+				chart.setDependencies(dependentCharts.toArray(new Chart[dependentCharts.size()]));
+				continue;
 			}
 		}
-
-		chart.setTemplates(templates.toArray(new Template[templates.size()]));
-
 		return chart;
 	}
 
@@ -80,16 +89,32 @@ public class ChartLoader {
 		return config;
 	}
 
-	private Template loadTemplate(File file) {
-		Template template = new Template();
-		template.setName(file.getName());
-		try {
-			template.setData(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
+	private Template[] loadTemplates(File templatePath) {
+		// File points to the template directory
+
+		List<File> files;
+		try (Stream<Path> paths = Files.walk(Paths.get(templatePath.getAbsolutePath()), 1)) {
+			files = paths.map(i -> i.toAbsolutePath().toFile()).collect(Collectors.toList());
 		}
 		catch (IOException e) {
-			throw new IllegalArgumentException("Could read template file " + file.getAbsoluteFile(), e);
+			throw new IllegalArgumentException("Could not process files in template path " + templatePath, e);
 		}
-		return template;
+
+		List<Template> templates = new ArrayList<>();
+		for (File file : files) {
+			if (file.getName().endsWith("yml") || file.getName().endsWith("yaml")) {
+				Template template = new Template();
+				template.setName(file.getName());
+				try {
+					template.setData(new String(Files.readAllBytes(file.toPath()), "UTF-8"));
+				}
+				catch (IOException e) {
+					throw new IllegalArgumentException("Could read template file " + file.getAbsoluteFile(), e);
+				}
+				templates.add(template);
+			}
+		}
+		return templates.toArray(new Template[templates.size()]);
 	}
 
 	private Metadata loadChartMetadata(File file) {

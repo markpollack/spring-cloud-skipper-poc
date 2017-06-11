@@ -1,0 +1,9 @@
+kind: Deployment
+deployment:
+  name: time
+  applicationProperties:
+    trigger.fixed-delay: 2
+  resource: {{resources.time.resourceAndGroupName}}:{{resources.time.version}}
+  resourceMetadata: {{resources.time.resourceAndGroupName}}:jar:metadata:{{resources.time.version}}
+  deploymentProperties:
+    memory: {{resources.requests.memory}}
