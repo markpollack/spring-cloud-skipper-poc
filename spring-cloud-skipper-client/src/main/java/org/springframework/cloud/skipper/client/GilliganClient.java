@@ -55,6 +55,7 @@ public class GilliganClient {
 	}
 
 	public ReleaseStatusResponse status(ReleaseStatusRequest releaseStatusRequest) {
+		// TODO change to get
 		log.info("Posting to " + baseURI + "/status");
 		ReleaseStatusResponse response = restTemplate.postForObject(baseURI + "/status", releaseStatusRequest,
 				ReleaseStatusResponse.class);
@@ -66,6 +67,11 @@ public class GilliganClient {
 		UpdateReleaseResponse response = restTemplate.postForObject(baseURI + "/update", updateReleaseRequest,
 				UpdateReleaseResponse.class);
 		return response;
+	}
+
+	public HistoryResponse history(HistoryRequest historyRequest) {
+		log.info("Posting to " + baseURI + "/history");
+		return restTemplate.postForObject(baseURI + "/history", historyRequest, HistoryResponse.class);
 	}
 
 	public static RestTemplate getDefaultRestTemplate() {
@@ -86,4 +92,5 @@ public class GilliganClient {
 		}
 		return restTemplate;
 	}
+
 }

@@ -76,6 +76,9 @@ public class Release {
 	}
 
 	public Config getConfig() {
+		if (config == null) {
+			return new Config();
+		}
 		return config;
 	}
 

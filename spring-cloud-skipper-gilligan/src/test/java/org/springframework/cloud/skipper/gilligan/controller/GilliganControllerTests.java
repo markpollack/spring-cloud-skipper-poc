@@ -34,10 +34,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.skipper.client.ChartLoader;
 import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
-import org.springframework.cloud.skipper.rpc.InstallReleaseRequest;
-import org.springframework.cloud.skipper.rpc.InstallReleaseResponse;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusRequest;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
+import org.springframework.cloud.skipper.rpc.*;
 import org.springframework.cloud.skipper.rpc.domain.Chart;
 import org.springframework.cloud.skipper.rpc.domain.Config;
 import org.springframework.cloud.skipper.rpc.domain.Release;
@@ -98,7 +95,7 @@ public class GilliganControllerTests<K, V> {
 
 	@After
 	public void setUpAfter() {
-		if (lastTestMethod.equals("t2status")) {
+		if (lastTestMethod.equals("t3update")) {
 			operations.execute((RedisConnection connection) -> {
 				connection.flushDb();
 				return "OK";
@@ -130,12 +127,9 @@ public class GilliganControllerTests<K, V> {
 		InstallReleaseResponse installReleaseResponse = mapper.readValue(releaseResponseString,
 				InstallReleaseResponse.class);
 
-		// Test release object is as expecte din terms of basic state.
+		// Test release object is as expected in terms of basic state.
 		Release release = installReleaseResponse.getRelease();
-		assertThat(release.getName()).isNotBlank();
-		assertThat(release.getVersion()).isEqualTo(1);
-		assertThat(release.getInfo().getStatus().getStatusCode()).isEqualByComparingTo(StatusCode.DEPLOYED);
-		assertThat(release.getInfo().getDescription()).isEqualTo("Install complete");
+		assertRelease(release, 1);
 
 		// Test that Release object was stored.
 		Release retrievedRelease = releaseRepository.findOne(release.getId());
@@ -148,6 +142,13 @@ public class GilliganControllerTests<K, V> {
 		assertThat(installReleaseResponse.getRelease().getManifest()).contains("resourceMetadata: "
 				+ "maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE");
 
+	}
+
+	private void assertRelease(Release release, int expectedVersion) {
+		assertThat(release.getName()).isNotBlank();
+		assertThat(release.getVersion()).isEqualTo(expectedVersion);
+		assertThat(release.getInfo().getStatus().getStatusCode()).isEqualByComparingTo(StatusCode.DEPLOYED);
+		assertThat(release.getInfo().getDescription()).isEqualTo("Install complete");
 	}
 
 	@Test
@@ -178,6 +179,52 @@ public class GilliganControllerTests<K, V> {
 		assertThat(releaseStatusResponse.getInfo().getStatus().getPlatformStatus())
 				.isEqualTo("All Applications deployed successfully");
 
+	}
+
+	@Test
+	public void t3update() throws Exception {
+		lastTestMethod = "t3update";
+		UpdateReleaseRequest updateReleaseRequest = createUpdateReleaseRequest();
+
+		MvcResult result = mockMvc
+				.perform(post("/skipper/update").contentType(contentType)
+						.content(convertObjectToJson(updateReleaseRequest)))
+				.andDo(print()).andExpect(status().isCreated()).andReturn();
+
+		String updateResponseString = result.getResponse().getContentAsString();
+		// wait for deployment
+		ObjectMapper mapper = new ObjectMapper();
+		UpdateReleaseResponse updateReleaseResponse = mapper.readValue(updateResponseString,
+				UpdateReleaseResponse.class);
+
+		Release release = updateReleaseResponse.getRelease();
+		assertRelease(updateReleaseResponse.getRelease(), 2);
+
+		// Test that Release object was stored.
+		Release retrievedRelease = releaseRepository.findOne(release.getId());
+		assertThat(retrievedRelease.getName()).isNotBlank();
+
+		// Test that template values were replaced.
+		assertThat(release.getManifest()).contains("count: 1");
+		assertThat(release.getManifest())
+				.contains("resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.1.RELEASE");
+		assertThat(release.getManifest()).contains("resourceMetadata: "
+				+ "maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.1.RELEASE");
+
+		t2status();
+		lastTestMethod = "t3update";
+	}
+
+	private UpdateReleaseRequest createUpdateReleaseRequest() {
+		ChartLoader chartLoader = new ChartLoader();
+		URL url = this.getClass().getResource("/log2");
+		File file = new File(url.getFile());
+		Chart chart = chartLoader.load(file.getAbsolutePath());
+		UpdateReleaseRequest updateReleaseRequest = new UpdateReleaseRequest();
+		updateReleaseRequest.setName(releaseName);
+		updateReleaseRequest.setChart(chart);
+		updateReleaseRequest.setConfigValues(new Config());
+		return updateReleaseRequest;
 	}
 
 	private InstallReleaseRequest createInstallReleaseRequest() {

@@ -18,7 +18,6 @@ package org.springframework.cloud.skipper.shell.command;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
-import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
@@ -28,18 +27,24 @@ import org.springframework.stereotype.Component;
  * @author Mark Pollack
  */
 @Component
-public class StatusCommand implements CommandMarker {
+public class UpdateCommand implements CommandMarker {
+
+	private static final String reuseValuesHelp = "Reuse the values from the last release, "
+			+ "ignored if resetValues is set";
+
+	private static final String resetValuesHelp = "Ignore stored values, resetting to default values.";
 
 	@Autowired
 	private GilliganService gilliganService;
 
-	@CliCommand("skipper status")
-	public String status(
-			@CliOption(key = { "", "releaseName" }, help = "Release name", mandatory = true) String releaseName,
-			@CliOption(key = "version", help = "Release version", mandatory = false, unspecifiedDefaultValue = "0") Integer releaseVersion) {
-		ReleaseStatusResponse releaseStatusResponse = gilliganService.status(releaseName, releaseVersion);
-		return releaseStatusResponse.toString();
+	@CliCommand("skipper update")
+	public String install(@CliOption(mandatory = true, key = { "", "chartPath" }, help = "Chart path") String chartPath,
+			@CliOption(mandatory = true, key = "releaseName", help = "Release name") String releaseName,
+			@CliOption(key = "version", help = "Release version", unspecifiedDefaultValue = "0", mandatory = false) Integer releaseVersion,
+			@CliOption(key = "reuseValues", help = reuseValuesHelp, unspecifiedDefaultValue = "false", mandatory = false) Boolean reuseValues,
+			@CliOption(key = "resetValues", help = resetValuesHelp, unspecifiedDefaultValue = "false", mandatory = false) Boolean resetValues) {
 
+		gilliganService.upgrade(chartPath, releaseName, releaseVersion, reuseValues, resetValues);
+		return "Release.getStatus";
 	}
-
 }

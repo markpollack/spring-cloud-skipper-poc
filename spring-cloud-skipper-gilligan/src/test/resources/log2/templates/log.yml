@@ -1,0 +1,11 @@
+kind: Deployment
+deployment:
+  count: {{count}}
+  name: log
+  applicationProperties:
+    log.level: WARN
+  resource: {{application.resource}}
+  resourceMetadata: {{application.resourceMetadata}}
+  deploymentProperties:
+    memory: 2048m
+

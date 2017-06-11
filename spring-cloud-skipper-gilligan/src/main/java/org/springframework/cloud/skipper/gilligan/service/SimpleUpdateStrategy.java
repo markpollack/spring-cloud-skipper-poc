@@ -34,13 +34,15 @@ public class SimpleUpdateStrategy implements UpdateStrategy {
 	}
 
 	@Override
-	public void update(Release currentRelease, Release updatedRelease) {
+	public Release update(Release currentRelease, Release updatedRelease) {
 
 		releaseDeployer.deploy(updatedRelease);
 
 		// Do something fancy
 
 		releaseDeployer.undeploy(currentRelease);
+
+		return updatedRelease;
 
 	}
 }

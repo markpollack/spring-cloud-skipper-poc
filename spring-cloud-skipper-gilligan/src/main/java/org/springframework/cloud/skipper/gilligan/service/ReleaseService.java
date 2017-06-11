@@ -16,10 +16,7 @@
 
 package org.springframework.cloud.skipper.gilligan.service;
 
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 
 import com.samskivert.mustache.Mustache;
 import org.slf4j.Logger;
@@ -97,7 +94,8 @@ public class ReleaseService {
 			requestedRelease = releaseRepository.findByNameAndVersion(releaseName, version);
 		}
 		if (requestedRelease == null) {
-			throw new IllegalArgumentException("Could not find release with name " + releaseName);
+			throw new IllegalArgumentException(
+					"Could not find release with name =" + releaseName + " version = " + version);
 		}
 
 		Assert.notNull(requestedRelease.getInfo(),
@@ -131,7 +129,9 @@ public class ReleaseService {
 		Info info = new Info();
 		info.setFirstDeployed(currentRelease.getInfo().getFirstDeployed());
 		info.setLastDeployed(new Date());
-		info.getStatus().setStatusCode(StatusCode.UNKNOWN);
+		Status status = new Status();
+		status.setStatusCode(StatusCode.UNKNOWN);
+		info.setStatus(status);
 		info.setDescription("Preparing upgrade");
 		updatedRelease.setInfo(info);
 		updatedRelease.setVersion(revision);
@@ -140,9 +140,19 @@ public class ReleaseService {
 		// Store in DB
 		releaseRepository.save(updatedRelease);
 
-		updateStrategy.update(currentRelease, updatedRelease);
+		return updateStrategy.update(currentRelease, updatedRelease);
 
-		return null;
+	}
+
+	public Release[] history(String name, int max) {
+		Iterable<Release> releases = releaseRepository.findAll();
+
+		List<Release> releaseList = new ArrayList<Release>();
+		for (Release release : releases) {
+			releaseList.add(release);
+		}
+
+		return releaseList.toArray(new Release[releaseList.size()]);
 	}
 
 	/**
@@ -177,7 +187,11 @@ public class ReleaseService {
 
 		// If request config Values is empty, but current.Config is not, copy current into
 		// the request.
-		if ((configValues.isConfigEmpty()) && (!currentRelease.getConfig().isConfigEmpty())) {
+		boolean configValuesEmpty = configValues != null && configValues.isConfigEmpty();
+		boolean currentConfigEmpty = currentRelease.getConfig().isConfigEmpty();
+		if (configValuesEmpty && (!currentConfigEmpty)) {
+			// if ((configValues.isConfigEmpty()) &&
+			// (!currentRelease.getConfig().isConfigEmpty())) {
 			log.info("Copying values from " + currentRelease.getName() + " + v(" + currentRelease.getVersion() + ")");
 			configValues = currentRelease.getConfig();
 		}
@@ -216,11 +230,21 @@ public class ReleaseService {
 	 * commandLineConfig values override values in templateConfig.
 	 */
 	private Properties mergeConfigValues(Config templateConfigValue, Config commandLineConfigValues) {
-		Assert.notNull(commandLineConfigValues, "Config object for commandLine Config Values can't be null");
-		Assert.notNull(templateConfigValue, "Config object for template Config Values can't be null");
-
-		Properties commandLineOverrideProperties = YamlUtils.getProperties(commandLineConfigValues.getRaw());
-		Properties templateVariables = YamlUtils.getProperties(templateConfigValue.getRaw());
+		// TODO investigate
+		Properties commandLineOverrideProperties;
+		if (commandLineConfigValues == null) {
+			commandLineOverrideProperties = new Properties();
+		}
+		else {
+			commandLineOverrideProperties = YamlUtils.getProperties(commandLineConfigValues.getRaw());
+		}
+		Properties templateVariables;
+		if (templateConfigValue == null) {
+			templateVariables = new Properties();
+		}
+		else {
+			templateVariables = YamlUtils.getProperties(templateConfigValue.getRaw());
+		}
 
 		Properties model = new Properties();
 		model.putAll(templateVariables);

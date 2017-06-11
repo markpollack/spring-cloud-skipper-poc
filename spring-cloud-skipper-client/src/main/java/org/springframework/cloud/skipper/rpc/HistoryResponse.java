@@ -14,14 +14,25 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.gilligan.service;
+package org.springframework.cloud.skipper.rpc;
 
 import org.springframework.cloud.skipper.rpc.domain.Release;
 
 /**
  * @author Mark Pollack
  */
-public interface UpdateStrategy {
+public class HistoryResponse {
 
-	Release update(Release currentRelease, Release updatedRelease);
+	private Release[] releases;
+
+	public HistoryResponse() {
+	}
+
+	public Release[] getReleases() {
+		return releases;
+	}
+
+	public void setReleases(Release[] releases) {
+		this.releases = releases;
+	}
 }

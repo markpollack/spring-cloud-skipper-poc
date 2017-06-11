@@ -18,6 +18,8 @@ package org.springframework.cloud.skipper.shell.command;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
+import org.springframework.cloud.skipper.rpc.HistoryResponse;
+import org.springframework.cloud.skipper.rpc.domain.Release;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
@@ -27,16 +29,22 @@ import org.springframework.stereotype.Component;
  * @author Mark Pollack
  */
 @Component
-public class UpgradeCommand implements CommandMarker {
+public class HistoryCommand implements CommandMarker {
+
+	private final String maxHelp = "maximum length of the revision list returned";
 
 	@Autowired
 	private GilliganService gilliganService;
 
-	@CliCommand("skipper upgrade")
-	public String install(@CliOption(mandatory = true, key = { "", "chartPath" }, help = "Chart path") String chartPath,
-			@CliOption(mandatory = true, key = "releaseName", help = "Release name") String releaseName,
-			@CliOption(key = "version", help = "Release version") int releaseVersion) {
-		gilliganService.upgrade(chartPath, releaseName, releaseVersion);
-		return "Release.getStatus";
+	@CliCommand("skipper history")
+	public String history(
+			@CliOption(key = { "", "releaseName" }, help = "Release name", mandatory = true) String releaseName,
+			@CliOption(key = "max", mandatory = false, help = maxHelp, unspecifiedDefaultValue = "0") int max) {
+		HistoryResponse historyRepsonse = gilliganService.history(releaseName, max);
+		return format(historyRepsonse.getReleases());
+	}
+
+	private String format(Release[] releases) {
+		return releases.toString();
 	}
 }

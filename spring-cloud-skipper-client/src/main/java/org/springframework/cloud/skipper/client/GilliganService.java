@@ -75,18 +75,28 @@ public class GilliganService {
 		return gilliganClient.status(releaseStatusRequest);
 	}
 
-	public Release upgrade(String chartPath, String releaseName, int releaseVersion) {
+	public Release upgrade(String chartPath, String releaseName, int releaseVersion, boolean reuseValues,
+			boolean resetValues) {
 
 		// Note, releaseVersion is not used now as we only support local paths. Is used
-		// when getting chart
-		// from the chart repository.
+		// when getting chart from the chart repository.
 		String resolvedChartPath = chartResolver.resolve(chartPath);
 		Chart chart = chartLoader.load(resolvedChartPath);
 
 		UpdateReleaseRequest updateReleaseRequest = new UpdateReleaseRequest();
 		updateReleaseRequest.setChart(chart);
 		updateReleaseRequest.setName(releaseName);
+		updateReleaseRequest.setReuseValues(reuseValues);
+		updateReleaseRequest.setResetValues(resetValues);
 		return gilliganClient.update(updateReleaseRequest).getRelease();
+
+	}
+
+	public HistoryResponse history(String releaseName, int max) {
+		HistoryRequest historyRequest = new HistoryRequest();
+		historyRequest.setName(releaseName);
+		historyRequest.setMax(max);
+		return gilliganClient.history(historyRequest);
 
 	}
 

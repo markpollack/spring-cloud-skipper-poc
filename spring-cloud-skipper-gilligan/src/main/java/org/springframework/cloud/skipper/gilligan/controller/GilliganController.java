@@ -78,6 +78,18 @@ public class GilliganController {
 
 	}
 
+	@PostMapping
+	@RequestMapping("/history")
+	public HistoryResponse history(@RequestBody HistoryRequest historyRequest) {
+
+		Release[] releases = releaseService.history(historyRequest.getName(), historyRequest.getMax());
+
+		HistoryResponse historyResponse = new HistoryResponse();
+		historyResponse.setReleases(releases);
+
+		return historyResponse;
+	}
+
 	private Release prepareRelease(InstallReleaseRequest installReleaseRequest) {
 		Release release = createInitialReleaseObject(installReleaseRequest);
 		Config configValues = installReleaseRequest.getConfigValues();
