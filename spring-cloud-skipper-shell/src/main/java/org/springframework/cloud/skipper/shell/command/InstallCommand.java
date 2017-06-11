@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.skipper.shell.command;
 
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
 import org.springframework.cloud.skipper.rpc.domain.Release;
@@ -38,7 +40,16 @@ public class InstallCommand implements CommandMarker {
 			@CliOption(key = "releaseName", help = "Release name") String releaseName) {
 
 		Release release = gilliganService.install(chartPath, releaseName);
-		return release.getName() + ":" + release.getVersion();
+		StringBuilder sb = new StringBuilder();
+		sb.append("Release Name: " + release.getName() + "\n");
+		sb.append("Release Version: " + release.getVersion() + "\n");
+		if (release.getInfo().getLastDeployed() != null) {
+			sb.append("Last Deployed: " + ISO8601Utils.format(release.getInfo().getLastDeployed()) + "\n");
+		}
+		sb.append("Status: " + release.getInfo().getStatus().getStatusCode() + "\n");
+		sb.append("Platform Status: " + release.getInfo().getStatus().getPlatformStatus() + "\n");
+
+		return sb.toString();
 
 	}
 }

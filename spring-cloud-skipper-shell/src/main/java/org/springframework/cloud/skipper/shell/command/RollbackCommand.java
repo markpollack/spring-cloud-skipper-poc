@@ -19,9 +19,12 @@ package org.springframework.cloud.skipper.shell.command;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
 import org.springframework.cloud.skipper.rpc.RollbackResponse;
+import org.springframework.cloud.skipper.rpc.domain.Release;
+import org.springframework.cloud.skipper.shell.command.support.ReleaseTableUtils;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
+import org.springframework.shell.table.Table;
 import org.springframework.stereotype.Component;
 
 /**
@@ -34,10 +37,12 @@ public class RollbackCommand implements CommandMarker {
 	private GilliganService gilliganService;
 
 	@CliCommand("skipper rollback")
-	public String rollback(
+	public Table rollback(
 			@CliOption(key = { "", "releaseName" }, help = "Release name", mandatory = true) String releaseName,
 			@CliOption(key = "version", help = "Release version", mandatory = false, unspecifiedDefaultValue = "0") Integer releaseVersion) {
 		RollbackResponse response = gilliganService.rollback(releaseName, releaseVersion);
-		return response.toString();
+		Release[] releases = new Release[1];
+		releases[0] = response.getRelease();
+		return ReleaseTableUtils.format(releases);
 	}
 }

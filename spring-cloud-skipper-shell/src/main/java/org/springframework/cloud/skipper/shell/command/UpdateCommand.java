@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.skipper.shell.command;
 
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
 import org.springframework.cloud.skipper.rpc.domain.Release;
@@ -46,6 +48,21 @@ public class UpdateCommand implements CommandMarker {
 			@CliOption(key = "resetValues", help = resetValuesHelp, unspecifiedDefaultValue = "false", mandatory = false) Boolean resetValues) {
 
 		Release release = gilliganService.upgrade(chartPath, releaseName, releaseVersion, reuseValues, resetValues);
-		return release.toString();
+
+		return createUpdateString(release);
+	}
+
+	private String createUpdateString(Release release) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Release Name: " + release.getName() + "\n");
+		sb.append("Release Version: " + release.getVersion() + "\n");
+		if (release.getInfo() != null && release.getInfo().getLastDeployed() != null) {
+			sb.append("Last Deployed: " + ISO8601Utils.format(release.getInfo().getLastDeployed()) + "\n");
+		}
+		if (release.getInfo() != null && release.getInfo().getStatus() != null) {
+			sb.append("Status: " + release.getInfo().getStatus().getStatusCode() + "\n");
+			sb.append("Platform Status: " + release.getInfo().getStatus().getPlatformStatus() + "\n");
+		}
+		return sb.toString();
 	}
 }

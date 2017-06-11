@@ -117,4 +117,5 @@ public class Release {
 	public void setDeploymentId(String deploymentId) {
 		this.deploymentId = deploymentId;
 	}
+
 }

@@ -19,10 +19,11 @@ package org.springframework.cloud.skipper.shell.command;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
 import org.springframework.cloud.skipper.rpc.HistoryResponse;
-import org.springframework.cloud.skipper.rpc.domain.Release;
+import org.springframework.cloud.skipper.shell.command.support.ReleaseTableUtils;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
+import org.springframework.shell.table.Table;
 import org.springframework.stereotype.Component;
 
 /**
@@ -37,14 +38,11 @@ public class HistoryCommand implements CommandMarker {
 	private GilliganService gilliganService;
 
 	@CliCommand("skipper history")
-	public String history(
+	public Table history(
 			@CliOption(key = { "", "releaseName" }, help = "Release name", mandatory = true) String releaseName,
 			@CliOption(key = "max", mandatory = false, help = maxHelp, unspecifiedDefaultValue = "0") int max) {
 		HistoryResponse historyRepsonse = gilliganService.history(releaseName, max);
-		return format(historyRepsonse.getReleases());
+		return ReleaseTableUtils.format(historyRepsonse.getReleases());
 	}
 
-	private String format(Release[] releases) {
-		return releases.toString();
-	}
 }

@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.skipper.shell.command;
 
+import com.fasterxml.jackson.databind.util.ISO8601Utils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
 import org.springframework.cloud.skipper.rpc.ReleaseStatusResponse;
@@ -38,8 +40,23 @@ public class StatusCommand implements CommandMarker {
 			@CliOption(key = { "", "releaseName" }, help = "Release name", mandatory = true) String releaseName,
 			@CliOption(key = "version", help = "Release version", mandatory = false, unspecifiedDefaultValue = "0") Integer releaseVersion) {
 		ReleaseStatusResponse releaseStatusResponse = gilliganService.status(releaseName, releaseVersion);
-		return releaseStatusResponse.toString();
+		return createStatusString(releaseVersion, releaseStatusResponse);
 
+	}
+
+	private String createStatusString(Integer releaseVersion, ReleaseStatusResponse releaseStatusResponse) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("Release Name: " + releaseStatusResponse.getName() + "\n");
+		sb.append("Release Version: " + releaseVersion + "\n");
+		if (releaseStatusResponse.getInfo() != null && releaseStatusResponse.getInfo().getLastDeployed() != null) {
+			sb.append(
+					"Last Deployed: " + ISO8601Utils.format(releaseStatusResponse.getInfo().getLastDeployed()) + "\n");
+		}
+		if (releaseStatusResponse.getInfo() != null && releaseStatusResponse.getInfo().getStatus() != null) {
+			sb.append("Status: " + releaseStatusResponse.getInfo().getStatus().getStatusCode() + "\n");
+			sb.append("Platform Status: " + releaseStatusResponse.getInfo().getStatus().getPlatformStatus() + "\n");
+		}
+		return sb.toString();
 	}
 
 }
