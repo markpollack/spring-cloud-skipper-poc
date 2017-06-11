@@ -151,8 +151,45 @@ public class ReleaseService {
 		for (Release release : releases) {
 			releaseList.add(release);
 		}
-
+		releaseList.sort(Comparator.comparing(Release::getVersion));
 		return releaseList.toArray(new Release[releaseList.size()]);
+	}
+
+	public Release rollback(String name, int version) {
+		// finds the previous release and prepares a new release object with the previous
+		// release's configuration
+
+		Release currentRelease = releaseRepository.findLatestRelease(name);
+		int rollbackVersion = version;
+		// default is to go back by one if no version specified.
+		if (version == 0) {
+			rollbackVersion = currentRelease.getVersion() - 1;
+		}
+		log.info("Rolling back " + name + " (current: v" + currentRelease.getVersion()
+				+ ", target: v" + rollbackVersion + ")");
+
+		Release previousRelease = releaseRepository.findByNameAndVersion(name, version);
+
+		Release release = new Release();
+		release.setName(name);
+		release.setChart(previousRelease.getChart());
+		release.setConfig(previousRelease.getConfig());
+		Info info = new Info();
+		info.setFirstDeployed(currentRelease.getInfo().getFirstDeployed());
+		info.setLastDeployed(new Date());
+		Status status = new Status();
+		status.setStatusCode(StatusCode.UNKNOWN);
+		info.setStatus(status);
+		info.setDescription("Rollback to " + rollbackVersion);
+		release.setInfo(info);
+		release.setVersion(currentRelease.getVersion() + 1);
+		release.setManifest(previousRelease.getManifest());
+
+		// Store in DB
+		releaseRepository.save(release);
+
+		return updateStrategy.update(currentRelease, release);
+
 	}
 
 	/**

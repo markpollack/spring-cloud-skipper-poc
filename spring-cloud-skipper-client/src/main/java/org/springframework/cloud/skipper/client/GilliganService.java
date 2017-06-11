@@ -104,4 +104,10 @@ public class GilliganService {
 		return "happy-panda";
 	}
 
+	public RollbackResponse rollback(String releaseName, Integer releaseVersion) {
+		RollbackRequest rollbackRequest = new RollbackRequest();
+		rollbackRequest.setName(releaseName);
+		rollbackRequest.setVersion(releaseVersion);
+		return gilliganClient.rollback(rollbackRequest);
+	}
 }

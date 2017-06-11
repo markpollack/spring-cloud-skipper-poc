@@ -90,6 +90,15 @@ public class GilliganController {
 		return historyResponse;
 	}
 
+	@PostMapping
+	@RequestMapping("/rollback")
+	public RollbackResponse rollback(@RequestBody RollbackRequest rollbackRequest) {
+		Release release = releaseService.rollback(rollbackRequest.getName(), rollbackRequest.getVersion());
+		RollbackResponse rollbackResponse = new RollbackResponse();
+		rollbackResponse.setRelease(release);
+		return rollbackResponse;
+	}
+
 	private Release prepareRelease(InstallReleaseRequest installReleaseRequest) {
 		Release release = createInitialReleaseObject(installReleaseRequest);
 		Config configValues = installReleaseRequest.getConfigValues();

@@ -48,7 +48,7 @@ public class GilliganClient {
 
 	public InstallReleaseResponse install(InstallReleaseRequest installReleaseRequest) {
 
-		log.info("Posting to " + baseURI + "/install");
+		log.debug("Posting to " + baseURI + "/install");
 		InstallReleaseResponse response = restTemplate.postForObject(baseURI + "/install", installReleaseRequest,
 				InstallReleaseResponse.class);
 		return response;
@@ -56,22 +56,27 @@ public class GilliganClient {
 
 	public ReleaseStatusResponse status(ReleaseStatusRequest releaseStatusRequest) {
 		// TODO change to get
-		log.info("Posting to " + baseURI + "/status");
+		log.debug("Posting to " + baseURI + "/status");
 		ReleaseStatusResponse response = restTemplate.postForObject(baseURI + "/status", releaseStatusRequest,
 				ReleaseStatusResponse.class);
 		return response;
 	}
 
 	public UpdateReleaseResponse update(UpdateReleaseRequest updateReleaseRequest) {
-		log.info("Posting to " + baseURI + "/update");
+		log.debug("Posting to " + baseURI + "/update");
 		UpdateReleaseResponse response = restTemplate.postForObject(baseURI + "/update", updateReleaseRequest,
 				UpdateReleaseResponse.class);
 		return response;
 	}
 
 	public HistoryResponse history(HistoryRequest historyRequest) {
-		log.info("Posting to " + baseURI + "/history");
+		log.debug("Posting to " + baseURI + "/history");
 		return restTemplate.postForObject(baseURI + "/history", historyRequest, HistoryResponse.class);
+	}
+
+	public RollbackResponse rollback(RollbackRequest rollbackRequest) {
+		log.debug("Posting to " + baseURI + "/rollback");
+		return restTemplate.postForObject(baseURI + "/rollback", rollbackRequest, RollbackResponse.class);
 	}
 
 	public static RestTemplate getDefaultRestTemplate() {
