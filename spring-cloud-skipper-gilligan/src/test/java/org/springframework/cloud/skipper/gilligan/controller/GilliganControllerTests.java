@@ -230,6 +230,7 @@ public class GilliganControllerTests<K, V> {
 	private InstallReleaseRequest createInstallReleaseRequest() {
 		ChartLoader chartLoader = new ChartLoader();
 		URL url = this.getClass().getResource("/log");
+		// URL url = this.getClass().getResource("/ticktock");
 		assertThat(url).isNotNull();
 		File file = new File(url.getFile());
 		assertThat(file).exists();

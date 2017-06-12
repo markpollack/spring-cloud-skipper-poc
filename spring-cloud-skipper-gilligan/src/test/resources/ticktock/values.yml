@@ -9,4 +9,3 @@ resources:
 deployment:
   request:
     memory: 1024m
-

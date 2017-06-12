@@ -9,4 +9,3 @@ deployment:
   deploymentProperties:
     memory: {{deployment.request.memory}}
 
-

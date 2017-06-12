@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.skipper.gilligan.service;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +37,7 @@ import org.springframework.cloud.skipper.rpc.domain.Status;
 import org.springframework.cloud.skipper.rpc.domain.StatusCode;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 /**
  * @author Mark Pollack
@@ -61,10 +65,15 @@ public class ReleaseDeployer {
 	 */
 	public void deploy(Release release) {
 		// Deploy the application
-		Deployment appDeployment = YmlUtils.unmarshallDeployment(release.getManifest());
-		String deploymentId = appDeployer.deploy(
-				createAppDeploymentRequest(appDeployment, release.getName(), String.valueOf(release.getVersion())));
-		release.setDeploymentId(deploymentId);
+		List<Deployment> appDeployments = YmlUtils.unmarshallDeployments(release.getManifest());
+
+		List<String> deploymentIds = new ArrayList<>();
+		for (Deployment appDeployment : appDeployments) {
+			deploymentIds.add(appDeployer.deploy(
+					createAppDeploymentRequest(appDeployment, release.getName(),
+							String.valueOf(release.getVersion()))));
+		}
+		StringUtils.collectionToCommaDelimitedString(deploymentIds);
 
 		// Store in DB
 		Status status = new Status();
@@ -78,7 +87,12 @@ public class ReleaseDeployer {
 	}
 
 	public void undeploy(Release release) {
-		appDeployer.undeploy(release.getDeploymentId());
+		List<String> deploymentIds = Arrays
+				.asList(StringUtils.commaDelimitedListToStringArray(release.getDeploymentId()));
+
+		for (String deploymentId : deploymentIds) {
+			appDeployer.undeploy(deploymentId);
+		}
 		Status status = new Status();
 		status.setStatusCode(StatusCode.SUPERSEDED);
 		release.getInfo().setStatus(status);
@@ -89,9 +103,21 @@ public class ReleaseDeployer {
 	public void calculateStatus(Release release) {
 		// TODO put in background thread.
 		boolean allClear = true;
+		Map<String, AppInstanceStatus> instances;
+		List<String> deploymentIds = Arrays
+				.asList(StringUtils.commaDelimitedListToStringArray(release.getDeploymentId()));
 
+		for (String deploymentId : deploymentIds) {
+			AppStatus status = appDeployer.status(deploymentId);
+			instances = status.getInstances();
+			for (AppInstanceStatus appInstanceStatus : instances.values()) {
+				if (appInstanceStatus.getState() != DeploymentState.deployed) {
+					allClear = false;
+				}
+			}
+		}
 		AppStatus status = appDeployer.status(release.getDeploymentId());
-		Map<String, AppInstanceStatus> instances = status.getInstances();
+		instances = status.getInstances();
 		for (AppInstanceStatus appInstanceStatus : instances.values()) {
 			if (appInstanceStatus.getState() != DeploymentState.deployed) {
 				allClear = false;

@@ -17,9 +17,12 @@
 package org.springframework.cloud.skipper.gilligan.util;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.databind.MappingIterator;
+import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
 import org.springframework.cloud.skipper.client.domain.Deployment;
 import org.springframework.cloud.skipper.client.domain.DeploymentKind;
@@ -29,14 +32,26 @@ import org.springframework.cloud.skipper.client.domain.DeploymentKind;
  */
 public class YmlUtils {
 
-	public static Deployment unmarshallDeployment(String manifests) {
-		ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+	public static List<Deployment> unmarshallDeployments(String manifests) {
+
+		List<DeploymentKind> deploymentKindList = new ArrayList<>();
+		YAMLMapper mapper = new YAMLMapper();
+		// TypeReference<DeploymentKind> typeReference = new
+		// TypeReference<DeploymentKind>();
 		try {
-			DeploymentKind deploymentKind = mapper.readValue(manifests, DeploymentKind.class);
-			return deploymentKind.getDeployment();
+			MappingIterator<DeploymentKind> it = mapper.readerFor(DeploymentKind.class).readValues(manifests);
+			while (it.hasNextValue()) {
+				DeploymentKind deploymentKind = it.next();
+				deploymentKindList.add(deploymentKind);
+			}
+
 		}
 		catch (IOException e) {
-			throw new IllegalArgumentException("Could not map YAML to deployment. YAML = " + manifests, e);
+			throw new IllegalArgumentException("Can't parse Release manifest YAML", e);
 		}
+
+		List<Deployment> deploymentList = deploymentKindList.stream().map(DeploymentKind::getDeployment)
+				.collect(Collectors.toList());
+		return deploymentList;
 	}
 }

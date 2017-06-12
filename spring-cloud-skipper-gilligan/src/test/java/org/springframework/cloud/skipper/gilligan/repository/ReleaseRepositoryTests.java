@@ -16,6 +16,7 @@
 package org.springframework.cloud.skipper.gilligan.repository;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Scanner;
 
 import org.junit.After;
@@ -64,9 +65,9 @@ public class ReleaseRepositoryTests<K, V> {
 
 	@Test
 	public void testDeserialization() {
-		String text = loadLogYaml();
-		Deployment deployment = YmlUtils.unmarshallDeployment(text);
-
+		String text = loadYml("/deserialization/log.yml");
+		List<Deployment> deployments = YmlUtils.unmarshallDeployments(text);
+		Deployment deployment = deployments.get(0);
 		assertThat(deployment.getCount()).isEqualTo(2);
 		assertThat(deployment.getName()).isEqualTo("log");
 		assertThat(deployment.getResource())
@@ -79,15 +80,22 @@ public class ReleaseRepositoryTests<K, V> {
 
 	}
 
-	private String loadLogYaml() {
-		return new Scanner(ReleaseRepositoryTests.class.getResourceAsStream("/old/log/deployments/log.yml"), "UTF-8")
+	@Test
+	public void testMultipleDocuments() {
+		String text = loadYml("/deserialization/multipleDeployments.yml");
+		List<Deployment> deployments = YmlUtils.unmarshallDeployments(text);
+		assertThat(deployments).hasSize(2);
+	}
+
+	private String loadYml(String file) {
+		return new Scanner(ReleaseRepositoryTests.class.getResourceAsStream(file), "UTF-8")
 				.useDelimiter("\\A").next();
 	}
 
 	@Test
 	public void testReleaseStorage() {
 
-		String text = loadLogYaml();
+		String text = loadYml("/deserialization/log.yml");
 
 		Release release = new Release();
 		release.setName("log");
@@ -101,7 +109,7 @@ public class ReleaseRepositoryTests<K, V> {
 		Status status = new Status();
 		status.setStatusCode(StatusCode.UNKNOWN);
 		info.setStatus(status);
-		info.setDescription("Inital install underway"); // Will be overwritten
+		info.setDescription("Initial install underway"); // Will be overwritten
 		release.setInfo(info);
 
 		release.setManifest(text);

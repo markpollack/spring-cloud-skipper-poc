@@ -57,14 +57,15 @@ public class ReleaseService {
 		this.updateStrategy = updateStrategy;
 	}
 
-	public Release install(Release release, Template[] templates, Config configValues) {
+	public Release install(Release release, Chart chart, Config configValues) {
 
 		// Resolve model values to render from the chart values file and command line
 		// values.
+		// ATM only take top level config values
 		Properties model = mergeConfigValues(release.getChart().getConfigValues(), configValues);
 
 		// Render yaml resources
-		String manifest = createManifest(templates, model);
+		String manifest = createManifest(chart, model);
 		release.setManifest(manifest);
 
 		// Store in DB
@@ -120,7 +121,7 @@ public class ReleaseService {
 		Properties model = mergeConfigValues(chart.getConfigValues(), configValues);
 
 		// Render yaml resources
-		String manifest = createManifest(chart.getTemplates(), model);
+		String manifest = createManifest(chart, model);
 
 		Release updatedRelease = new Release();
 		updatedRelease.setName(name);
@@ -238,19 +239,34 @@ public class ReleaseService {
 	 * Iterate overall the template files, replacing placeholders with model values. One
 	 * string is returned that contain all the YAML of multiple files using YAML file
 	 * delimiter.
-	 * @param templates YAML with placeholders to replace
+	 * @param chart The top level chart that contains all templates where placeholders are
+	 * to be replaced
 	 * @param model The placeholder values.
 	 * @return A YAML string containing all the templates with replaced values.
 	 */
-	private String createManifest(Template[] templates, Properties model) {
+	private String createManifest(Chart chart, Properties model) {
+
 		// Aggregate all valid manifests into one big doc.
 		StringBuilder sb = new StringBuilder();
-		for (Template template : templates) {
-			String templateAsString = new String(template.getData());
-			com.samskivert.mustache.Template mustacheTemplate = Mustache.compiler().compile(templateAsString);
-			sb.append("\n---\n# Source: " + template.getName() + "\n");
-			sb.append(mustacheTemplate.execute(model));
+		// Top level templates.
+		Template[] templates = chart.getTemplates();
+		if (templates != null) {
+			for (Template template : templates) {
+				String templateAsString = new String(template.getData());
+				com.samskivert.mustache.Template mustacheTemplate = Mustache.compiler().compile(templateAsString);
+				sb.append("\n---\n# Source: " + template.getName() + "\n");
+				sb.append(mustacheTemplate.execute(model));
+			}
 		}
+
+		if (chart.getDependencies() != null) {
+			Chart[] charts = chart.getDependencies();
+			for (Chart subChart : charts) {
+				sb.append(createManifest(subChart, model));
+			}
+		}
+		// sb.append(createManifest())
+
 		return sb.toString();
 	}
 

@@ -1,0 +1,26 @@
+
+---
+# Source: log.yml
+kind: Deployment
+deployment:
+  count: 2
+  name: log
+  applicationProperties:
+    log.level: WARN
+  resource: maven://org.springframework.cloud.stream.app:log-sink-rabbit:1.2.0.RELEASE
+  resourceMetadata: maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE
+  deploymentProperties:
+    memory: 2048m
+
+---
+# Source: time.yml
+kind: Deployment
+deployment:
+  count: 2
+  name: time
+  applicationProperties:
+    trigger.fixed-delay: 2
+  resource: maven://org.springframework.cloud.stream.app:time-source-rabbit:1.2.0.RELEASE
+  resourceMetadata: maven://org.springframework.cloud.stream.app:time-source-rabbit:jar:metadata:1.2.0.RELEASE
+  deploymentProperties:
+    memory: 2048m

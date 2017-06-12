@@ -102,8 +102,7 @@ public class GilliganController {
 	private Release prepareRelease(InstallReleaseRequest installReleaseRequest) {
 		Release release = createInitialReleaseObject(installReleaseRequest);
 		Config configValues = installReleaseRequest.getConfigValues();
-		Template[] templates = installReleaseRequest.getChart().getTemplates();
-		return releaseService.install(release, templates, configValues);
+		return releaseService.install(release, installReleaseRequest.getChart(), configValues);
 	}
 
 	private Release createInitialReleaseObject(InstallReleaseRequest installReleaseRequest) {
