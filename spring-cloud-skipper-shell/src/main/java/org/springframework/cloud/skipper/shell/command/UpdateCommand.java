@@ -45,9 +45,11 @@ public class UpdateCommand implements CommandMarker {
 			@CliOption(mandatory = true, key = "releaseName", help = "Release name") String releaseName,
 			@CliOption(key = "version", help = "Release version", unspecifiedDefaultValue = "0", mandatory = false) Integer releaseVersion,
 			@CliOption(key = "reuseValues", help = reuseValuesHelp, unspecifiedDefaultValue = "false", mandatory = false) Boolean reuseValues,
-			@CliOption(key = "resetValues", help = resetValuesHelp, unspecifiedDefaultValue = "false", mandatory = false) Boolean resetValues) {
+			@CliOption(key = "resetValues", help = resetValuesHelp, unspecifiedDefaultValue = "false", mandatory = false) Boolean resetValues,
+			@CliOption(key = "set", help = "Application Properties to set") String commandLineProperties) {
 
-		Release release = gilliganService.upgrade(chartPath, releaseName, releaseVersion, reuseValues, resetValues);
+		Release release = gilliganService.upgrade(chartPath, releaseName, releaseVersion, reuseValues, resetValues,
+				commandLineProperties);
 
 		return createUpdateString(release);
 	}

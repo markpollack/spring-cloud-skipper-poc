@@ -72,16 +72,18 @@ public class ReleaseRepositoryImpl implements CustomReleaseRepository {
 		for (Release release : releases) {
 			List<Deployment> unmarshalledDeployments = YmlUtils.unmarshallDeployments(release.getManifest());
 			for (Deployment unmarshalledDeployment : unmarshalledDeployments) {
-				Map<String, String> labels = unmarshalledDeployment.getLabels();
 				boolean match = false;
-				for (Map.Entry<String, String> selectorEntry : selectorMap.entrySet()) {
-					if (labels.containsKey(selectorEntry.getKey())) {
-						if (labels.get(selectorEntry.getKey()).equals(selectorEntry.getValue())) {
-							match = true;
-						}
-						else {
-							match = false;
-							break;
+				Map<String, String> labels = unmarshalledDeployment.getLabels();
+				if (labels != null) {
+					for (Map.Entry<String, String> selectorEntry : selectorMap.entrySet()) {
+						if (labels.containsKey(selectorEntry.getKey())) {
+							if (labels.get(selectorEntry.getKey()).equals(selectorEntry.getValue())) {
+								match = true;
+							}
+							else {
+								match = false;
+								break;
+							}
 						}
 					}
 				}

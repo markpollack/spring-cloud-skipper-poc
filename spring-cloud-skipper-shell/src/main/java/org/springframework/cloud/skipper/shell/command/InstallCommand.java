@@ -37,9 +37,10 @@ public class InstallCommand implements CommandMarker {
 
 	@CliCommand("skipper install")
 	public String install(@CliOption(mandatory = true, key = { "", "chartPath" }, help = "Chart path") String chartPath,
-			@CliOption(key = "releaseName", help = "Release name") String releaseName) {
+			@CliOption(key = "releaseName", help = "Release name") String releaseName,
+			@CliOption(key = "set", help = "Application Properties to set") String commandLineProperties) {
 
-		Release release = gilliganService.install(chartPath, releaseName);
+		Release release = gilliganService.install(chartPath, releaseName, commandLineProperties);
 		StringBuilder sb = new StringBuilder();
 		sb.append("Release Name: " + release.getName() + "\n");
 		sb.append("Release Version: " + release.getVersion() + "\n");

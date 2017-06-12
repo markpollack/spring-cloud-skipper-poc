@@ -48,6 +48,8 @@ public class SimpleUpdateStrategy implements UpdateStrategy {
 
 		releaseDeployer.undeploy(currentRelease);
 
+		releaseDeployer.calculateStatus(updatedRelease);
+
 		return updatedRelease;
 
 	}

@@ -16,6 +16,7 @@
 
 package org.springframework.cloud.skipper.client;
 
+import io.codearte.props2yaml.Props2YAML;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,6 +25,7 @@ import org.springframework.cloud.skipper.rpc.*;
 import org.springframework.cloud.skipper.rpc.domain.Chart;
 import org.springframework.cloud.skipper.rpc.domain.Config;
 import org.springframework.cloud.skipper.rpc.domain.Release;
+import org.springframework.util.StringUtils;
 
 /**
  * The high level client API that communicates with the Gilligan Server.
@@ -49,7 +51,7 @@ public class GilliganService {
 		this.chartLoader = chartLoader;
 	}
 
-	public Release install(String chartPath, String releaseName) {
+	public Release install(String chartPath, String releaseName, String commandLineProperties) {
 
 		String releaseNameToUse;
 		if (releaseName == null) {
@@ -62,8 +64,9 @@ public class GilliganService {
 		String resolvedChartPath = chartResolver.resolve(chartPath);
 
 		Chart chart = chartLoader.load(resolvedChartPath);
+		Config commandLineConfig = createCommandLineConfig(commandLineProperties);
 
-		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, chart, new Config());
+		InstallReleaseRequest request = new InstallReleaseRequest(releaseNameToUse, chart, commandLineConfig);
 		InstallReleaseResponse response = gilliganClient.install(request);
 		return response.getRelease();
 	}
@@ -76,20 +79,32 @@ public class GilliganService {
 	}
 
 	public Release upgrade(String chartPath, String releaseName, int releaseVersion, boolean reuseValues,
-			boolean resetValues) {
+			boolean resetValues, String commandLineProperties) {
 
 		// Note, releaseVersion is not used now as we only support local paths. Is used
 		// when getting chart from the chart repository.
 		String resolvedChartPath = chartResolver.resolve(chartPath);
 		Chart chart = chartLoader.load(resolvedChartPath);
 
+		Config commandLineConfig = createCommandLineConfig(commandLineProperties);
+
 		UpdateReleaseRequest updateReleaseRequest = new UpdateReleaseRequest();
 		updateReleaseRequest.setChart(chart);
 		updateReleaseRequest.setName(releaseName);
 		updateReleaseRequest.setReuseValues(reuseValues);
 		updateReleaseRequest.setResetValues(resetValues);
+		updateReleaseRequest.setConfigValues(commandLineConfig);
 		return gilliganClient.update(updateReleaseRequest).getRelease();
 
+	}
+
+	private Config createCommandLineConfig(String commandLineProperties) {
+		Config commandLineConfig = new Config();
+		if (StringUtils.hasText(commandLineProperties)) {
+			String yaml = Props2YAML.fromContent(commandLineProperties).convert();
+			commandLineConfig.setRaw(yaml);
+		}
+		return commandLineConfig;
 	}
 
 	public HistoryResponse history(String releaseName, int max) {
