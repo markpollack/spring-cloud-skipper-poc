@@ -80,10 +80,10 @@ public class ReleaseService {
 
 		// Store manifest in git?
 
-		manifestRepository.store(release);
-
 		// Deploy the application
 		releaseDeployer.deploy(release);
+
+		manifestRepository.store(release);
 
 		releaseDeployer.calculateStatus(release);
 

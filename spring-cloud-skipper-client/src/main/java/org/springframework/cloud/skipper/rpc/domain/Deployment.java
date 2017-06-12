@@ -39,7 +39,17 @@ public class Deployment {
 
 	private Map<String, String> deploymentProperties;
 
+	private String features;
+
 	public Deployment() {
+	}
+
+	public String getFeatures() {
+		return features;
+	}
+
+	public void setFeatures(String features) {
+		this.features = features;
 	}
 
 	public String getName() {

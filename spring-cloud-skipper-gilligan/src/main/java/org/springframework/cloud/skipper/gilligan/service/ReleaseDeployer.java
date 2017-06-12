@@ -48,12 +48,15 @@ public class ReleaseDeployer {
 
 	private final ReleaseRepository releaseRepository;
 
+	private final List<Feature> featureList;
+
 	@Autowired
 	public ReleaseDeployer(AppDeployer appDeployer, DelegatingResourceLoader delegatingResourceLoader,
-			ReleaseRepository releaseRepository) {
+			ReleaseRepository releaseRepository, List<Feature> featureList) {
 		this.appDeployer = appDeployer;
 		this.delegatingResourceLoader = delegatingResourceLoader;
 		this.releaseRepository = releaseRepository;
+		this.featureList = featureList;
 	}
 
 	/**
@@ -135,7 +138,18 @@ public class ReleaseDeployer {
 
 	}
 
-	private AppDeploymentRequest createAppDeploymentRequest(Deployment deployment, String releaseName, String version) {
+	private AppDeploymentRequest createAppDeploymentRequest(Deployment deployment, String releaseName,
+			String version) {
+
+		/*
+		 * String[] featureNames =
+		 * StringUtils.commaDelimitedListToStringArray(rawDeployment.getFeatures());
+		 * Deployment deployment = rawDeployment; for (String featureName : featureNames)
+		 * { for (Feature feature : featureList) { if
+		 * (feature.getName().equals(featureName)) { deployment =
+		 * feature.addFeature(deployment); } } }
+		 */
+
 		AppDefinition appDefinition = new AppDefinition(deployment.getName(), deployment.getApplicationProperties());
 		Resource resource = delegatingResourceLoader.getResource(deployment.getResource());
 
