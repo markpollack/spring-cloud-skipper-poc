@@ -16,10 +16,7 @@
 
 package org.springframework.cloud.skipper.gilligan.service;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.deployer.resource.support.DelegatingResourceLoader;
@@ -61,6 +58,7 @@ public class ReleaseDeployer {
 
 	/**
 	 * Deploy the specified release
+	 *
 	 * @param release the release to deploy
 	 */
 	public void deploy(Release release) {
@@ -73,7 +71,7 @@ public class ReleaseDeployer {
 					createAppDeploymentRequest(appDeployment, release.getName(),
 							String.valueOf(release.getVersion()))));
 		}
-		StringUtils.collectionToCommaDelimitedString(deploymentIds);
+		release.setDeploymentId(StringUtils.collectionToCommaDelimitedString(deploymentIds));
 
 		// Store in DB
 		Status status = new Status();
@@ -103,24 +101,16 @@ public class ReleaseDeployer {
 	public void calculateStatus(Release release) {
 		// TODO put in background thread.
 		boolean allClear = true;
-		Map<String, AppInstanceStatus> instances;
+		Map<String, AppInstanceStatus> instances = new HashMap<String, AppInstanceStatus>();
 		List<String> deploymentIds = Arrays
 				.asList(StringUtils.commaDelimitedListToStringArray(release.getDeploymentId()));
 
 		for (String deploymentId : deploymentIds) {
 			AppStatus status = appDeployer.status(deploymentId);
-			instances = status.getInstances();
-			for (AppInstanceStatus appInstanceStatus : instances.values()) {
+			for (AppInstanceStatus appInstanceStatus : status.getInstances().values()) {
 				if (appInstanceStatus.getState() != DeploymentState.deployed) {
 					allClear = false;
 				}
-			}
-		}
-		AppStatus status = appDeployer.status(release.getDeploymentId());
-		instances = status.getInstances();
-		for (AppInstanceStatus appInstanceStatus : instances.values()) {
-			if (appInstanceStatus.getState() != DeploymentState.deployed) {
-				allClear = false;
 			}
 		}
 		if (allClear) {
@@ -130,11 +120,16 @@ public class ReleaseDeployer {
 		else {
 			StringBuffer stringBuffer = new StringBuffer();
 			stringBuffer.append("Not all applications deployed successfully. ");
-			for (AppInstanceStatus appInstanceStatus : instances.values()) {
-				stringBuffer.append(appInstanceStatus.getId()).append("=").append(appInstanceStatus.getState())
-						.append(", ");
+			for (String deploymentId : deploymentIds) {
+				AppStatus status = appDeployer.status(deploymentId);
+				for (AppInstanceStatus appInstanceStatus : status.getInstances().values()) {
+					stringBuffer.append(appInstanceStatus.getId()).append("=").append(appInstanceStatus.getState())
+							.append(", ");
+				}
 			}
-			release.getInfo().getStatus().setPlatformStatus(stringBuffer.toString());
+			String platformStatus = stringBuffer.toString();
+			platformStatus = platformStatus.replaceAll(", $", "");
+			release.getInfo().getStatus().setPlatformStatus(platformStatus);
 			releaseRepository.save(release);
 		}
 

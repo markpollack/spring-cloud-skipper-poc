@@ -85,6 +85,8 @@ public class ReleaseService {
 		// Deploy the application
 		releaseDeployer.deploy(release);
 
+		releaseDeployer.calculateStatus(release);
+
 		return release;
 
 	}

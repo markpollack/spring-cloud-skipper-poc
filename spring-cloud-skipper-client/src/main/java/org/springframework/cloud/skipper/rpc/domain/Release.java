@@ -31,7 +31,7 @@ public class Release {
 	// For persistence purposes
 	private String id;
 
-	// Links a specifc app deployer deployment to this release
+	// Links a collections of app deployer deployment IDs for this release
 	private String deploymentId;
 
 	private String name;

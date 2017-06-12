@@ -16,9 +16,14 @@
 
 package org.springframework.cloud.skipper.shell.command;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.GilliganService;
 import org.springframework.cloud.skipper.rpc.SelectorResponse;
+import org.springframework.cloud.skipper.rpc.domain.Deployment;
 import org.springframework.shell.core.CommandMarker;
 import org.springframework.shell.core.annotation.CliCommand;
 import org.springframework.shell.core.annotation.CliOption;
@@ -37,6 +42,10 @@ public class SelectCommand implements CommandMarker {
 	public String select(@CliOption(key = { "",
 			"selectorExpression" }, help = "Selector Expression", mandatory = true) String selectorExpression) {
 		SelectorResponse selectorResponse = gilliganService.select(selectorExpression);
-		return selectorResponse.getDeployments().toString();
+
+		List<String> appNameList = Arrays.stream(selectorResponse.getDeployments()).map(Deployment::getName)
+				.collect(Collectors.toList());
+		Collectors.toList();
+		return appNameList.toString();
 	}
 }

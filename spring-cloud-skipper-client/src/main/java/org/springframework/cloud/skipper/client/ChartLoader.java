@@ -102,7 +102,7 @@ public class ChartLoader {
 
 		List<Template> templates = new ArrayList<>();
 		for (File file : files) {
-			if (file.getName().endsWith("yml") || file.getName().endsWith("yaml")) {
+			if (isYamlFile(file)) {
 				Template template = new Template();
 				template.setName(file.getName());
 				try {
@@ -115,6 +115,15 @@ public class ChartLoader {
 			}
 		}
 		return templates.toArray(new Template[templates.size()]);
+	}
+
+	private boolean isYamlFile(File file) {
+		Path path = Paths.get(file.getAbsolutePath());
+		String fileName = path.getFileName().toString();
+		if (!fileName.startsWith(".")) {
+			return (fileName.endsWith("yml") || fileName.endsWith("yaml"));
+		}
+		return false;
 	}
 
 	private Metadata loadChartMetadata(File file) {

@@ -39,6 +39,9 @@ public class Deployment {
 
 	private Map<String, String> deploymentProperties;
 
+	public Deployment() {
+	}
+
 	public String getName() {
 		return name;
 	}
