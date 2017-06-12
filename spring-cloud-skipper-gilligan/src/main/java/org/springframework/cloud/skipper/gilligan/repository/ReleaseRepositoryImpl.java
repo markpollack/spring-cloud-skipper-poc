@@ -16,7 +16,13 @@
 
 package org.springframework.cloud.skipper.gilligan.repository;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.skipper.gilligan.util.YmlUtils;
+import org.springframework.cloud.skipper.rpc.domain.Deployment;
 import org.springframework.cloud.skipper.rpc.domain.Release;
 
 /**
@@ -56,5 +62,34 @@ public class ReleaseRepositoryImpl implements CustomReleaseRepository {
 			}
 		}
 		return matchingRelease;
+	}
+
+	@Override
+	public Deployment[] select(Map<String, String> selectorMap) {
+		List<Deployment> matchingDeployments = new ArrayList<>();
+
+		Iterable<Release> releases = releaseRepository.findAll();
+		for (Release release : releases) {
+			List<Deployment> unmarshalledDeployments = YmlUtils.unmarshallDeployments(release.getManifest());
+			for (Deployment unmarshalledDeployment : unmarshalledDeployments) {
+				Map<String, String> labels = unmarshalledDeployment.getLabels();
+				boolean match = false;
+				for (Map.Entry<String, String> selectorEntry : selectorMap.entrySet()) {
+					if (labels.containsKey(selectorEntry.getKey())) {
+						if (labels.get(selectorEntry.getKey()).equals(selectorEntry.getValue())) {
+							match = true;
+						}
+						else {
+							match = false;
+							break;
+						}
+					}
+				}
+				if (match) {
+					matchingDeployments.add(unmarshalledDeployment);
+				}
+			}
+		}
+		return matchingDeployments.toArray(new Deployment[matchingDeployments.size()]);
 	}
 }

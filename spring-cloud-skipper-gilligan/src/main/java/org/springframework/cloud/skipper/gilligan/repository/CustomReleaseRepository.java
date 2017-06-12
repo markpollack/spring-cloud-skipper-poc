@@ -16,6 +16,9 @@
 
 package org.springframework.cloud.skipper.gilligan.repository;
 
+import java.util.Map;
+
+import org.springframework.cloud.skipper.rpc.domain.Deployment;
 import org.springframework.cloud.skipper.rpc.domain.Release;
 
 /**
@@ -26,4 +29,6 @@ public interface CustomReleaseRepository {
 	Release findLatestRelease(String releaseName);
 
 	Release findByNameAndVersion(String releaseName, int version);
+
+	Deployment[] select(Map<String, String> selectorMap);
 }

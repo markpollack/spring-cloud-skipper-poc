@@ -110,4 +110,10 @@ public class GilliganService {
 		rollbackRequest.setVersion(releaseVersion);
 		return gilliganClient.rollback(rollbackRequest);
 	}
+
+	public SelectorResponse select(String selectorExpression) {
+		SelectorRequest selectorRequest = new SelectorRequest();
+		selectorRequest.setSelectorExpression(selectorExpression);
+		return gilliganClient.select(selectorRequest);
+	}
 }

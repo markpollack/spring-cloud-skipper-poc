@@ -2,6 +2,9 @@ kind: Deployment
 deployment:
   count: {{count}}
   name: log
+  labels:
+    environment: production
+    color: blue
   applicationProperties:
     log.level: WARN
   resource: {{application.resource}}

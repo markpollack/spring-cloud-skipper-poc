@@ -13,14 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper.client.old;
 
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+package org.springframework.cloud.skipper.rpc;
+
 import org.springframework.cloud.skipper.rpc.domain.Deployment;
 
 /**
  * @author Mark Pollack
  */
-@EnableConfigurationProperties(Deployment.class)
-public class SimpleApp {
+public class SelectorResponse {
+
+	private Deployment[] deployments;
+
+	public SelectorResponse() {
+	}
+
+	public Deployment[] getDeployments() {
+		return deployments;
+	}
+
+	public void setDeployments(Deployment[] deployments) {
+		this.deployments = deployments;
+	}
 }

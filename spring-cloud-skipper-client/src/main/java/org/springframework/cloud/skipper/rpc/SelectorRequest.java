@@ -14,33 +14,23 @@
  * limitations under the License.
  */
 
-package org.springframework.cloud.skipper.client.domain;
+package org.springframework.cloud.skipper.rpc;
 
 /**
  * @author Mark Pollack
  */
-public class DeploymentKind {
+public class SelectorRequest {
 
-	private String kind;
+	private String selectorExpression;
 
-	private Deployment deployment;
-
-	public DeploymentKind() {
+	public SelectorRequest() {
 	}
 
-	public String getKind() {
-		return kind;
+	public String getSelectorExpression() {
+		return selectorExpression;
 	}
 
-	public void setKind(String kind) {
-		this.kind = kind;
-	}
-
-	public Deployment getDeployment() {
-		return deployment;
-	}
-
-	public void setDeployment(Deployment deployment) {
-		this.deployment = deployment;
+	public void setSelectorExpression(String selectorExpression) {
+		this.selectorExpression = selectorExpression;
 	}
 }

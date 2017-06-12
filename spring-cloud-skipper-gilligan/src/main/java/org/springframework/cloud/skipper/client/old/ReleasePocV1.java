@@ -15,7 +15,7 @@
  */
 package org.springframework.cloud.skipper.client.old;
 
-import org.springframework.cloud.skipper.client.domain.Deployment;
+import org.springframework.cloud.skipper.rpc.domain.Deployment;
 import org.springframework.data.annotation.Id;
 
 /**

@@ -99,6 +99,15 @@ public class GilliganController {
 		return rollbackResponse;
 	}
 
+	@PostMapping
+	@RequestMapping("/select")
+	public SelectorResponse select(@RequestBody SelectorRequest selectorRequest) {
+		Deployment[] deployments = releaseService.select(selectorRequest.getSelectorExpression());
+		SelectorResponse selectorResponse = new SelectorResponse();
+		selectorResponse.setDeployments(deployments);
+		return selectorResponse;
+	}
+
 	private Release prepareRelease(InstallReleaseRequest installReleaseRequest) {
 		Release release = createInitialReleaseObject(installReleaseRequest);
 		Config configValues = installReleaseRequest.getConfigValues();

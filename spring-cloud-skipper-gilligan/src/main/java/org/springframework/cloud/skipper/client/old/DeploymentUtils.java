@@ -21,7 +21,7 @@ import java.util.Map;
 import org.springframework.boot.Banner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.cloud.skipper.client.domain.Deployment;
+import org.springframework.cloud.skipper.rpc.domain.Deployment;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.util.StringUtils;
 

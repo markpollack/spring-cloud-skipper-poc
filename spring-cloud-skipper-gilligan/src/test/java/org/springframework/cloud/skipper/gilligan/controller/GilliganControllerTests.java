@@ -142,6 +142,17 @@ public class GilliganControllerTests<K, V> {
 		assertThat(installReleaseResponse.getRelease().getManifest()).contains("resourceMetadata: "
 				+ "maven://org.springframework.cloud.stream.app:log-sink-rabbit:jar:metadata:1.2.0.RELEASE");
 
+		SelectorRequest selectorRequest = new SelectorRequest();
+		selectorRequest.setSelectorExpression("environment=production,color=blue");
+		result = mockMvc
+				.perform(post("/skipper/select").contentType(contentType)
+						.content(convertObjectToJson(selectorRequest)))
+				.andDo(print()).andExpect(status().isOk()).andReturn();
+		releaseResponseString = result.getResponse().getContentAsString();
+		SelectorResponse selectorResponse = mapper.readValue(releaseResponseString, SelectorResponse.class);
+
+		assertThat(selectorResponse.getDeployments()).hasSize(1);
+
 	}
 
 	private void assertRelease(Release release, int expectedVersion) {

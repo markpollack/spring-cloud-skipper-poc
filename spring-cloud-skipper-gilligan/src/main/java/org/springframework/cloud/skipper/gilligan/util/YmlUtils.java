@@ -24,8 +24,8 @@ import java.util.stream.Collectors;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 
-import org.springframework.cloud.skipper.client.domain.Deployment;
-import org.springframework.cloud.skipper.client.domain.DeploymentKind;
+import org.springframework.cloud.skipper.rpc.domain.Deployment;
+import org.springframework.cloud.skipper.rpc.domain.DeploymentKind;
 
 /**
  * @author Mark Pollack

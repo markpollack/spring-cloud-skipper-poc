@@ -16,6 +16,8 @@
 
 package org.springframework.cloud.skipper.gilligan.service;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.util.*;
 
 import com.samskivert.mustache.Mustache;
@@ -32,6 +34,7 @@ import org.springframework.cloud.skipper.gilligan.util.YmlMergeUtils;
 import org.springframework.cloud.skipper.rpc.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Performs release operations based on method signatures independent of skipper.rpc data
@@ -197,6 +200,32 @@ public class ReleaseService {
 
 		return updateStrategy.update(currentRelease, release);
 
+	}
+
+	public Deployment[] select(String selectorExpression) {
+		Properties selectorProperties = new Properties();
+		String[] selectorLines = StringUtils.commaDelimitedListToStringArray(selectorExpression);
+		StringBuilder sb = new StringBuilder();
+		for (String selectorLine : selectorLines) {
+			sb.append(selectorLine + "\n");
+		}
+		try {
+			selectorProperties.load(new StringReader(sb.toString()));
+			return releaseRepository.select(propertiesToMap(selectorProperties));
+		}
+		catch (IOException e) {
+			throw new IllegalArgumentException("Could not parse selectorExpression", e);
+		}
+	}
+
+	private static Map<String, String> propertiesToMap(Properties props) {
+		HashMap<String, String> hm = new HashMap<String, String>();
+		Enumeration<Object> e = props.keys();
+		while (e.hasMoreElements()) {
+			String s = (String) e.nextElement();
+			hm.put(s, props.getProperty(s));
+		}
+		return hm;
 	}
 
 	/**

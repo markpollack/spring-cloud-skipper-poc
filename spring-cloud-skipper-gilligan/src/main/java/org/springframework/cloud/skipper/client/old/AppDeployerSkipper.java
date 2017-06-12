@@ -31,7 +31,7 @@ import org.springframework.cloud.deployer.spi.app.DeploymentState;
 import org.springframework.cloud.deployer.spi.core.AppDefinition;
 import org.springframework.cloud.deployer.spi.core.AppDeploymentRequest;
 import org.springframework.cloud.skipper.client.Skipper;
-import org.springframework.cloud.skipper.client.domain.Deployment;
+import org.springframework.cloud.skipper.rpc.domain.Deployment;
 import org.springframework.core.io.Resource;
 
 /**

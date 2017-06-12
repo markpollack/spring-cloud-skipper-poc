@@ -79,6 +79,11 @@ public class GilliganClient {
 		return restTemplate.postForObject(baseURI + "/rollback", rollbackRequest, RollbackResponse.class);
 	}
 
+	public SelectorResponse select(SelectorRequest selectorRequest) {
+		log.debug("Posting to " + baseURI + "/select");
+		return restTemplate.postForObject(baseURI + "/select", selectorRequest, SelectorResponse.class);
+	}
+
 	public static RestTemplate getDefaultRestTemplate() {
 
 		RestTemplate restTemplate = new RestTemplate();

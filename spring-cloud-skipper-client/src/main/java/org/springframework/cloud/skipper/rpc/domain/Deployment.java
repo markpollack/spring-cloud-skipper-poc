@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.cloud.skipper.client.domain;
+package org.springframework.cloud.skipper.rpc.domain;
 
 import java.util.Map;
 
@@ -28,6 +28,8 @@ public class Deployment {
 	private String name;
 
 	private int count;
+
+	private Map<String, String> labels;
 
 	private Map<String, String> applicationProperties;
 
@@ -85,10 +87,24 @@ public class Deployment {
 		this.deploymentProperties = deploymentProperties;
 	}
 
+	public Map<String, String> getLabels() {
+		return labels;
+	}
+
+	public void setLabels(Map<String, String> labels) {
+		this.labels = labels;
+	}
+
 	@Override
 	public String toString() {
-		return "Deployment{" + "name='" + name + '\'' + ", count=" + count + ", applicationProperties="
-				+ applicationProperties + ", resource='" + resource + '\'' + ", resourceMetadata='" + resourceMetadata
-				+ '\'' + ", deploymentProperties=" + deploymentProperties + '}';
+		return "Deployment{" +
+				"name='" + name + '\'' +
+				", count=" + count +
+				", labels=" + labels +
+				", applicationProperties=" + applicationProperties +
+				", resource='" + resource + '\'' +
+				", resourceMetadata='" + resourceMetadata + '\'' +
+				", deploymentProperties=" + deploymentProperties +
+				'}';
 	}
 }
