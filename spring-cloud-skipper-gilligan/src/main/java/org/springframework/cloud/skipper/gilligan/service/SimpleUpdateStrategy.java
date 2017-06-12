@@ -17,6 +17,7 @@
 package org.springframework.cloud.skipper.gilligan.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.skipper.gilligan.repository.ManifestRepository;
 import org.springframework.cloud.skipper.rpc.domain.Release;
 import org.springframework.stereotype.Component;
 
@@ -28,9 +29,12 @@ public class SimpleUpdateStrategy implements UpdateStrategy {
 
 	private final ReleaseDeployer releaseDeployer;
 
+	private final ManifestRepository manifestRepository;
+
 	@Autowired
-	public SimpleUpdateStrategy(ReleaseDeployer releaseDeployer) {
+	public SimpleUpdateStrategy(ReleaseDeployer releaseDeployer, ManifestRepository manifestRepository) {
 		this.releaseDeployer = releaseDeployer;
+		this.manifestRepository = manifestRepository;
 	}
 
 	@Override
@@ -38,7 +42,9 @@ public class SimpleUpdateStrategy implements UpdateStrategy {
 
 		releaseDeployer.deploy(updatedRelease);
 
-		// Do something fancy
+		// Do something fancy in terms of health detection of new release.
+
+		manifestRepository.store(updatedRelease);
 
 		releaseDeployer.undeploy(currentRelease);
 

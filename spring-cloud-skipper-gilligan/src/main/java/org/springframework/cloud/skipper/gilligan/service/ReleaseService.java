@@ -26,6 +26,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.skipper.client.YamlUtils;
+import org.springframework.cloud.skipper.gilligan.repository.ManifestRepository;
 import org.springframework.cloud.skipper.gilligan.repository.ReleaseRepository;
 import org.springframework.cloud.skipper.gilligan.util.YmlMergeUtils;
 import org.springframework.cloud.skipper.rpc.domain.*;
@@ -49,12 +50,15 @@ public class ReleaseService {
 
 	private final UpdateStrategy updateStrategy;
 
+	private final ManifestRepository manifestRepository;
+
 	@Autowired
 	public ReleaseService(ReleaseRepository releaseRepository, ReleaseDeployer releaseDeployer,
-			UpdateStrategy updateStrategy) {
+			UpdateStrategy updateStrategy, ManifestRepository manifestRepository) {
 		this.releaseRepository = releaseRepository;
 		this.releaseDeployer = releaseDeployer;
 		this.updateStrategy = updateStrategy;
+		this.manifestRepository = manifestRepository;
 	}
 
 	public Release install(Release release, Chart chart, Config configValues) {
@@ -72,6 +76,8 @@ public class ReleaseService {
 		releaseRepository.save(release);
 
 		// Store manifest in git?
+
+		manifestRepository.store(release);
 
 		// Deploy the application
 		releaseDeployer.deploy(release);
